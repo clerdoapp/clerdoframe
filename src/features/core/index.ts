@@ -1,5 +1,5 @@
 import { Brush, Clapperboard, Eye, File, Home, MessageSquare, Palette, Plus, Presentation, Sparkles, Wand2 } from 'lucide-react';
-import { openDialog, registerCommands, run } from '../../app/commands';
+import { command, openDialog, registerCommands, run } from '../../app/commands';
 import { registerMenu, registerRailTab } from '../../app/registry';
 import type { FrameStore, ViewMode } from '../../app/store';
 import { newPresentation, openFile, saveFile } from '../../app/files';
@@ -95,14 +95,15 @@ export const registerCore = (): void => {
     },
     {
       id: 'slide.duplicate', label: 'Duplicate slide', group: 'Slides', keys: 'Mod+D',
-      run: (s) => s.tryChange('Duplicate slide', () => {
+      // With shapes selected on the canvas (and focus not in the slide list), Mod+D duplicates the shapes.
+      run: (s, arg) => (arg !== 'slides' && s.sel.length && !s.editing && !document.activeElement?.closest?.('.slidelist') && command('edit.duplicate') ? run(s, 'edit.duplicate') : s.tryChange('Duplicate slide', () => {
         const idx = selectedSlides(s);
         const copies = idx.map((i) => cloneSlide(s.deck.slides[i]!));
         const at = idx.at(-1)! + 1;
         s.deck.slides.splice(at, 0, ...copies);
         s.cur = at; s.slideSel = copies.map((_, k) => at + k);
-      }),
-      enabled: (s) => s.deck.slides.length > 0 && s.view.mode !== 'master',
+      })),
+      enabled: (s) => (s.deck.slides.length > 0 && s.view.mode !== 'master') || s.sel.length > 0,
     },
     {
       id: 'slide.delete', label: 'Delete slide', group: 'Slides',
@@ -216,8 +217,8 @@ export const registerCore = (): void => {
     { id: 'view.notesPage', label: 'Notes page', group: 'View', active: (s) => s.view.mode === 'notesPage', run: (s) => setMode(s, 'notesPage') },
     { id: 'view.reading', label: 'Reading view', group: 'View', active: (s) => s.view.mode === 'reading', run: (s) => setMode(s, 'reading') },
     { id: 'view.master', label: 'Slide master', group: 'View', active: (s) => s.view.mode === 'master', run: (s) => setMode(s, s.view.mode === 'master' ? 'normal' : 'master') },
-    { id: 'view.zoomIn', label: 'Zoom in', group: 'View', keys: 'Mod+=', run: (s) => { const z = typeof s.view.zoom === 'number' ? s.view.zoom : (s.ext.fitScale as number) ?? 1; s.view.zoom = Math.min(4, Math.round((z + 0.1) * 10) / 10); s.emit(); } },
-    { id: 'view.zoomOut', label: 'Zoom out', group: 'View', keys: 'Mod+-', run: (s) => { const z = typeof s.view.zoom === 'number' ? s.view.zoom : (s.ext.fitScale as number) ?? 1; s.view.zoom = Math.max(0.1, Math.round((z - 0.1) * 10) / 10); s.emit(); } },
+    { id: 'view.zoomIn', label: 'Zoom in', group: 'View', keys: 'Mod+Alt+=', run: (s) => { const z = typeof s.view.zoom === 'number' ? s.view.zoom : (s.ext.fitScale as number) ?? 1; s.view.zoom = Math.min(4, Math.round((z + 0.1) * 10) / 10); s.emit(); } },
+    { id: 'view.zoomOut', label: 'Zoom out', group: 'View', keys: 'Mod+Alt+-', run: (s) => { const z = typeof s.view.zoom === 'number' ? s.view.zoom : (s.ext.fitScale as number) ?? 1; s.view.zoom = Math.max(0.1, Math.round((z - 0.1) * 10) / 10); s.emit(); } },
     { id: 'view.fit', label: 'Fit to window', group: 'View', active: (s) => s.view.zoom === 'fit', run: (s) => { s.view.zoom = 'fit'; s.emit(); } },
     { id: 'view.zoom100', label: 'Zoom to 100%', group: 'View', run: (s) => { s.view.zoom = 1; s.emit(); } },
     { id: 'view.ruler', label: 'Ruler', group: 'View', active: (s) => s.view.ruler, run: (s) => { s.view.ruler = !s.view.ruler; s.emit(); } },
@@ -248,7 +249,7 @@ export const registerCore = (): void => {
     { label: 'Paste', command: 'slide.paste', keys: 'Mod+V', disabled: !slideClip.length },
     { label: '', sep: true },
     { label: 'New slide', command: 'slide.new', keys: 'Mod+M' },
-    { label: 'Duplicate slide', command: 'slide.duplicate', keys: 'Mod+D' },
+    { label: 'Duplicate slide', command: 'slide.duplicate', arg: 'slides', keys: 'Mod+D' },
     { label: 'Delete slide', command: 'slide.delete' },
     { label: '', sep: true },
     { label: 'Add section', command: 'section.add' },

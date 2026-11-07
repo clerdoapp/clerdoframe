@@ -67,19 +67,20 @@ export const targetOf = (store: FrameStore, edit: TextEdit, create = false): Bod
 export const parasOf = (store: FrameStore, edit: TextEdit): Paragraph[] => targetOf(store, edit)?.body.paras ?? [{ runs: [] }];
 
 /** Every text body of a shape (all table cells, group children). */
-export const bodiesOf = (s: Shape, cells?: { r1: number; c1: number; r2: number; c2: number }): { shape: AutoShape; body: TextBody; owner: Shape }[] => {
+export const bodiesOf = (s: Shape, cells?: { r1: number; c1: number; r2: number; c2: number } | null, create = false): { shape: AutoShape; body: TextBody; owner: Shape }[] => {
   if (s.kind === 'shape') {
-    s.text ??= { paras: [{ runs: [] }] };
-    return [{ shape: s, body: s.text, owner: s }];
+    if (!canHoldText(s)) return [];
+    if (create) s.text ??= { paras: [{ runs: [] }] };
+    return [{ shape: s, body: s.text ?? { paras: [{ runs: [] }] }, owner: s }];
   }
-  if (s.kind === 'group') return s.children.flatMap((c) => bodiesOf(c));
+  if (s.kind === 'group') return s.children.flatMap((c) => bodiesOf(c, null, create));
   if (s.kind === 'table') {
     const out: { shape: AutoShape; body: TextBody; owner: Shape }[] = [];
     s.rows.forEach((row, r) => row.cells.forEach((cell, c) => {
       if (cell.hMerge || cell.vMerge) return;
       if (cells && (r < cells.r1 || r > cells.r2 || c < cells.c1 || c > cells.c2)) return;
-      cell.text ??= { paras: [{ runs: [] }] };
-      out.push({ shape: cellPseudo(s, r, c, cell), body: cell.text, owner: s });
+      if (create) cell.text ??= { paras: [{ runs: [] }] };
+      out.push({ shape: cellPseudo(s, r, c, cell), body: cell.text ?? { paras: [{ runs: [] }] }, owner: s });
     }));
     return out;
   }

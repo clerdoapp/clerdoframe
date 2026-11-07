@@ -30,12 +30,13 @@ const topSel = (store: FrameStore): Shape[] => {
 };
 
 /** Text bodies that whole-shape formatting applies to. */
-const targets = (store: FrameStore): { shape: AutoShape; body: TextBody }[] => {
+/** create: give shapes without text an empty body (only inside a change). */
+const targets = (store: FrameStore, create = false): { shape: AutoShape; body: TextBody }[] => {
   const ts = store.ext.tableSel as TableSel | undefined;
   const out: { shape: AutoShape; body: TextBody }[] = [];
   for (const s of topSel(store)) {
-    if (s.kind === 'table' && ts && ts.table === s.id) out.push(...bodiesOf(s, ts));
-    else out.push(...bodiesOf(s));
+    if (s.kind === 'table' && ts && ts.table === s.id) out.push(...bodiesOf(s, ts, create));
+    else out.push(...bodiesOf(s, null, create));
   }
   return out;
 };
@@ -85,11 +86,10 @@ export const applyRunStyle = (store: FrameStore, patch: RunPatch): void => {
     applyToSession(s, 'Text format', (paras, r, shape, ctx) => styleRange(paras, r, patch, resolver(shape, paras, ctx)));
     return;
   }
-  const list = targets(store);
-  if (!list.length) return;
+  if (!targets(store).length) return;
   store.tryChange('Text format', () => {
     const ctx = renderCtx(store);
-    for (const { shape, body } of list) {
+    for (const { shape, body } of targets(store, true)) {
       if (!body.paras.length) body.paras.push({ runs: [] });
       styleRange(body.paras, allRange(body.paras), patch, resolver(shape, body.paras, ctx));
       for (const p of body.paras) {
@@ -115,11 +115,10 @@ export const applyParaStyle = (store: FrameStore, patch: ParaPatch): void => {
     applyToSession(s, 'Paragraph', (paras, r, shape, ctx) => styleParas(paras, parasIn(r), fn(shape, ctx)));
     return;
   }
-  const list = targets(store);
-  if (!list.length) return;
+  if (!targets(store).length) return;
   store.tryChange('Paragraph', () => {
     const ctx = renderCtx(store);
-    for (const { shape, body } of list) {
+    for (const { shape, body } of targets(store, true)) {
       if (!body.paras.length) body.paras.push({ runs: [] });
       styleParas(body.paras, body.paras.map((_, i) => i), fn(shape, ctx));
     }
@@ -134,7 +133,7 @@ export const applyBodyProps = (store: FrameStore, patch: Partial<Omit<TextBody, 
   const bodies: { body: TextBody; owner: Shape | null }[] = [];
   store.tryChange(label, () => {
     if (s) { const t = locate(store, s.edit, true); if (t) bodies.push({ body: t.body, owner: t.owner }); }
-    else for (const x of targets(store)) bodies.push({ body: x.body, owner: store.shape(x.shape.id) });
+    else for (const x of targets(store, true)) bodies.push({ body: x.body, owner: store.shape(x.shape.id) });
     for (const { body, owner } of bodies) {
       Object.assign(body, patch);
       for (const k of Object.keys(patch) as (keyof TextBody)[]) if (body[k] === undefined) delete body[k];
@@ -185,10 +184,10 @@ export const insertTextAtCaret = (store: FrameStore, text: string, style?: RunSt
     store.emit();
     return;
   }
-  const t = targets(store)[0];
-  if (!t) return;
+  if (!targets(store).length) return;
   store.tryChange('Insert text', () => {
-    const body = locate(store, { shape: t.shape.id.includes(':') ? t.shape.id.split(':')[0]! : t.shape.id }, true)?.body ?? t.body;
+    const t = targets(store, true)[0]!;
+    const body = t.body;
     if (!body.paras.length) body.paras.push({ runs: [] });
     const e = endPos(body.paras);
     insertText(body.paras, { start: e, end: e }, text, style);
@@ -208,9 +207,8 @@ export const changeCase = (store: FrameStore, mode: CaseMode): void => {
     applyToSession(s, 'Change case', (paras, r) => changeCaseRange(paras, r, mode));
     return;
   }
-  const list = targets(store);
-  if (!list.length) return;
-  store.tryChange('Change case', () => { for (const { body } of list) changeCaseRange(body.paras, allRange(body.paras), mode); });
+  if (!targets(store).length) return;
+  store.tryChange('Change case', () => { for (const { body } of targets(store, true)) changeCaseRange(body.paras, allRange(body.paras), mode); });
 };
 
 /** Paragraph indexes that paragraph formatting applies to while editing (or null when not editing). */
@@ -236,16 +234,15 @@ export const shiftLevel = (store: FrameStore, dir: 1 | -1): void => {
       if (!lvl) delete st.level;
       // Without a placeholder's per-level styles the margin is what moves the text.
       if (!shape.ph || p.style?.marginLeft !== undefined) st.marginLeft = Math.max(0, (eff.marginLeft ?? 0) + dir * LEVEL_STEP);
-      p.style = st;
+      if (Object.keys(st).length) p.style = st; else delete p.style;
     }
   };
   const s = live(store);
   if (s) { applyToSession(s, dir > 0 ? 'Increase indent' : 'Decrease indent', (paras, r, shape, ctx) => shift(shape, paras, parasIn(r), ctx)); return; }
-  const list = targets(store);
-  if (!list.length) return;
+  if (!targets(store).length) return;
   store.tryChange(dir > 0 ? 'Increase indent' : 'Decrease indent', () => {
     const ctx = renderCtx(store);
-    for (const { shape, body } of list) shift(shape, body.paras, body.paras.map((_, i) => i), ctx);
+    for (const { shape, body } of targets(store, true)) shift(shape, body.paras, body.paras.map((_, i) => i), ctx);
   });
 };
 

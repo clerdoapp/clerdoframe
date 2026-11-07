@@ -27,7 +27,7 @@ export interface Session {
   root: HTMLElement | null;
   composing: boolean;
   /** Applied once the editor has drawn: a client point to put the caret at, or a range. */
-  want: { point?: { x: number; y: number; word?: boolean }; range?: Range; at?: 'end' | 'all' } | null;
+  want: { point?: { x: number; y: number; word?: boolean }; range?: Range; at?: 'end' | 'all'; insert?: string } | null;
 }
 
 let cur: Session | null = null;
@@ -80,7 +80,11 @@ const modelJson = (store: FrameStore, edit: TextEdit): string => {
 // ---------- Lifecycle ----------
 
 export const begin = (store: FrameStore, edit: TextEdit): Session => {
-  if (cur && sameEdit(cur.edit, edit) && cur.store === store) return cur;
+  if (cur && sameEdit(cur.edit, edit) && cur.store === store) {
+    const w = pendingWant.get(key(edit));
+    if (w) { cur.want = w; pendingWant.delete(key(edit)); }
+    return cur;
+  }
   end();
   const json = modelJson(store, edit);
   const paras = JSON.parse(json) as Paragraph[];
@@ -174,6 +178,8 @@ export const draw = (s: Session, w?: number, h?: number): void => {
     // Paragraphs whose runs are all empty still need a line box.
     if (!p.textContent && !p.querySelector('br')) p.appendChild(fill());
   }
+  // Redrawing replaces the nodes the selection was in; put the caret back.
+  if (root.ownerDocument.activeElement === root) writeSelection(root, s.sel, s.backward);
 };
 const fill = (): HTMLElement => { const b = document.createElement('br'); b.setAttribute('data-fill', ''); return b; };
 
