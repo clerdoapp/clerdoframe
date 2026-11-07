@@ -78,7 +78,7 @@ registerKind('media', (s, ctx, _defs, o) => {
 type El = HTMLMediaElement & { __fade?: number; __shape?: Media };
 
 const trimOf = (m: Media, el: HTMLMediaElement): { start: number; end: number } => {
-  const dur = Number.isFinite(el.duration) ? el.duration : Infinity;
+  const dur = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : Infinity;
   const start = Math.max(0, m.trim?.start ?? 0);
   const end = m.trim?.end && m.trim.end > start ? Math.min(dur, m.trim.end) : dur;
   return { start, end };

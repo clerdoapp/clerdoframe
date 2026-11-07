@@ -159,7 +159,7 @@ export const insertText = (paras: Paragraph[], r: Range, text: string, style?: R
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
   lines.forEach((line, li) => {
     if (li) pos = splitParagraph(paras, pos);
-    const parts = line.split(/[\v ]/);
+    const parts = line.split(/[\v\u2028]/);
     parts.forEach((part, pi) => {
       if (pi) pos = insertBreak(paras, pos);
       pos = insertPlain(paras, pos, part, st);

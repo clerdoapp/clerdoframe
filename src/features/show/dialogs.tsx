@@ -242,7 +242,14 @@ export const TrimDialog = ({ store, data, close }: DialogProps<string>) => {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const meta = () => { const d0 = Number.isFinite(el.duration) ? el.duration : 0; setDur(d0); setRange((r) => ({ start: r.start, end: r.end || d0 })); el.currentTime = range.start; };
+    const got = (d0: number) => { setDur(d0); setRange((r) => ({ start: r.start, end: r.end || d0 })); el.currentTime = range.start; };
+    const meta = () => {
+      if (Number.isFinite(el.duration)) { got(el.duration); return; }
+      // Recorded clips often report no length until the end is reached once.
+      const fix = () => { if (Number.isFinite(el.duration)) { el.removeEventListener('durationchange', fix); got(el.duration); } };
+      el.addEventListener('durationchange', fix);
+      el.currentTime = 1e7;
+    };
     const tu = () => { setT(el.currentTime); if (range.end && el.currentTime >= range.end) el.pause(); };
     el.addEventListener('loadedmetadata', meta);
     el.addEventListener('timeupdate', tu);

@@ -15,8 +15,8 @@ export const startShow = (store: FrameStore, opts: ShowOpts = {}): ShowControlle
   if (!store.deck.slides.length) { store.notify('Add a slide first.'); return null; }
   const old = showOf(store);
   if (old) old.finish();
-  let mode = opts.mode ?? 'show';
   const st = store.deck.show;
+  let mode = opts.mode ?? (store.ext.presenterDefault === true && st.type === 'presenter' ? 'presenter' : 'show');
   if (mode === 'show' && st.type === 'browsed') mode = 'reading';
   let audience: Window | null = null;
   if (mode === 'presenter' && !opts.sameScreen) {
@@ -131,11 +131,12 @@ export const applyEffect = (s: FrameStore, cls: AnimClass, effect: string, add: 
       const cur = add ? undefined : editedAnims(s).find((a) => a.shape === sh.id);
       const a = makeAnim(s, sh, cls, effect, option);
       if (cur) {
-        Object.assign(cur, { cls, effect, option: a.option, path: a.path, value: cur.cls === cls ? cur.value ?? a.value : a.value });
+        const prevCls = cur.cls;
+        Object.assign(cur, { cls, effect, option: a.option, path: a.path, value: prevCls === cls ? cur.value ?? a.value : a.value });
         if (!a.option) delete cur.option;
         if (cls !== 'path') delete cur.path;
         if (cls === 'path' || cls === 'emph') delete cur.textBy;
-        if (a.duration !== undefined && cur.cls !== cls) cur.duration = a.duration;
+        if (prevCls !== cls) cur.duration = a.duration;
         last = cur.id;
       } else {
         if (shapes.indexOf(sh) > 0) a.trigger = 'with';

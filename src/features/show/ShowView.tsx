@@ -306,7 +306,7 @@ export const ShowSurface = ({ c, bar = true, primary = true, win = window }: { c
       {bar && !rehearse && !c.kiosk && (
         <div className={`show-bar${idle && !c.tool ? ' idle' : ''}`} onPointerUp={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
           <button className="show-btn" aria-label="Previous" title="Previous" onClick={() => c.prev()}><ChevronLeft size={20} strokeWidth={S} /></button>
-          <span className="show-count">{c.pos + 1} / {c.order.length}</span>
+          <span className="show-count">{c.slideIndex + 1} / {c.deck.slides.length}</span>
           <button className="show-btn" aria-label="Next" title="Next" onClick={() => c.next()}><ChevronRight size={20} strokeWidth={S} /></button>
           <ToolPicker c={c} compact />
           <button className="show-btn" aria-label="See all slides" title="See all slides" onClick={() => { c.overview = true; c.emit(); }}><Grid2x2 size={18} strokeWidth={S} /></button>

@@ -6,7 +6,7 @@ import {
 } from '../../model/deck';
 import { attr, boolAttr, find, findAll, kid, kids, numAttr, type XNode } from '../xml';
 import { readChartPart } from './chart';
-import { ang, colorNode, px, readColor, readCrop, readEffects, readFill, readLine, type ColorCtx, type FillCtx } from './dml';
+import { colorNode, px, readColor, readCrop, readEffects, readFill, readLine, type ColorCtx, type FillCtx } from './dml';
 import { readCustGeom } from './geom';
 import type { Package } from './opc';
 import { readTextBody, type TextCtx } from './text';
