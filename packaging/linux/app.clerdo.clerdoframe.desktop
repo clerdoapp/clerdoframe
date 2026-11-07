@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=ClerdoFrame
+GenericName=Presentation
+Comment=Design slides, animate them and present
+Exec=clerdoframe %F
+TryExec=clerdoframe
+Icon=app.clerdo.clerdoframe
+Terminal=false
+StartupNotify=true
+StartupWMClass=ClerdoFrame
+Categories=Office;Presentation;
+Keywords=presentation;slides;pptx;slideshow;deck;
+MimeType=application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.openxmlformats-officedocument.presentationml.slideshow;application/vnd.openxmlformats-officedocument.presentationml.template;application/vnd.ms-powerpoint.presentation.macroEnabled.12;application/vnd.oasis.opendocument.presentation;
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New window
+Exec=clerdoframe

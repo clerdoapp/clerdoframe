@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.clerdo.clerdoframe</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>ClerdoFrame</name>
+  <summary>Free presentation app</summary>
+  <developer id="app.clerdo"><name>Clerdo</name></developer>
+  <description>
+    <p>Design slides, animate them and present. ClerdoFrame opens and saves .pptx presentations and works offline.</p>
+    <ul>
+      <li>Themes, slide masters and layouts, shapes, pictures, tables, charts, diagrams and equations</li>
+      <li>Transitions, animations, presenter view, rehearsed timings and recorded narration</li>
+      <li>Export to PDF, images, video and outline; works offline, with no account and no tracking</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">app.clerdo.clerdoframe.desktop</launchable>
+  <url type="homepage">https://clerdo.app</url>
+  <url type="bugtracker">https://github.com/clerdoapp/clerdoframe/issues</url>
+  <url type="vcs-browser">https://github.com/clerdoapp/clerdoframe</url>
+  <content_rating type="oars-1.1"/>
+  <categories><category>Office</category><category>Presentation</category></categories>
+  <provides>
+    <binary>clerdoframe</binary>
+    <mediatype>application/vnd.openxmlformats-officedocument.presentationml.presentation</mediatype>
+  </provides>
+  <releases><release version="0.5.0" date="2026-11-07"><description><p>First release.</p></description></release></releases>
+</component>

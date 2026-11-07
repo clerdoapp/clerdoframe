@@ -1,0 +1,18 @@
+{
+  "name": "ClerdoFrame",
+  "short_name": "ClerdoFrame",
+  "description": "Free presentation app by Clerdo",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4efed",
+  "theme_color": "#2b0f08",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "file_handlers": [
+    { "action": "./", "accept": { "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"] } }
+  ]
+}

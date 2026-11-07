@@ -8,7 +8,7 @@ const offline = (): Plugin => ({
   name: 'clerdoframe-offline',
   apply: 'build',
   closeBundle() {
-    const core = /^(carlito|hanken-grotesk)-(latin|latin-ext)-/;
+    const core = /^(carlito|hanken-grotesk|arimo|tinos)-(latin|latin-ext)-/;
     const assets = readdirSync('dist/assets').filter((f) => !f.endsWith('.woff') && (!f.endsWith('.woff2') || core.test(f))).map((f) => `assets/${f}`);
     const files = ['./', 'manifest.webmanifest', 'favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', ...assets];
     const version = assets.join('').length + '-' + Date.now().toString(36);

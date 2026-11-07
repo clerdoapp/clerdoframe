@@ -1,0 +1,13 @@
+ClerdoFrame
+Copyright (c) 2026 Clerdo.
+
+Bundled third-party material:
+- Lucide icons (lucide-react): ISC License. Also used as the built-in icon library.
+- React, fflate: MIT License.
+- nspell (spelling checker): MIT License.
+- dictionary-en (English word list, from SCOWL): MIT AND BSD licences; see
+  node_modules/dictionary-en/license.
+- Fonts (Carlito, Caladea, Arimo, Tinos, Cousine, Hanken Grotesk, Inter, Lato, Montserrat, Open Sans,
+  Roboto, Roboto Mono, Noto Naskh Arabic, Playfair Display, Poppins, Merriweather, Raleway, Oswald,
+  Source Serif 4, Nunito, DM Sans, Bebas Neue, Fira Code): SIL Open Font License 1.1 or Apache
+  License 2.0, through the @fontsource packages.
