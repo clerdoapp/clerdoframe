@@ -115,6 +115,11 @@ export const presetOf = (cls: AnimClass, effect: string, option?: string): { id:
   }
   const name = cls === 'exit' ? ENTR_OF_EXIT[effect] ?? effect : effect;
   if (name === 'floatIn' && option === 'd') return { id: FLOAT_DOWN_ID, sub: 0, filter: 'fade' };
+  if (name === 'shape') {
+    const k = (option ?? 'circle-out').split('-')[0];
+    const e = ENTR.shape!;
+    return { id: ({ box: 4, diamond: 8, plus: 13 } as Record<string, number>)[k ?? ''] ?? 6, sub: e.sub!(option), filter: e.filter!(option) };
+  }
   const e = ENTR[name] ?? ENTR.fade!;
   return { id: e.id, sub: e.sub?.(option) ?? 0, ...(e.filter ? { filter: e.filter(option) } : {}) };
 };
@@ -125,8 +130,9 @@ export const effectOf = (cls: AnimClass, id: number, sub: number): { effect: str
   if (cls === 'path') { const hit = PATH_BY_ID.get(id); return hit ? { effect: hit[0], option: hit[1] } : { effect: 'custom' }; }
   let name: string, option: string | undefined;
   if (id === FLOAT_DOWN_ID) { name = 'floatIn'; option = 'd'; }
-  else if ([4, 6, 8, 13].includes(id) && (sub === 16 || sub === 32) && id !== 4) {
-    const k = id === 6 ? 'circle' : id === 8 ? 'diamond' : 'plus';
+  else if ([4, 6, 8, 13].includes(id) && (sub === 16 || sub === 32)) {
+    // These presets are what the "Shape" effect writes; the older one-shape effects share them.
+    const k = id === 4 ? 'box' : id === 6 ? 'circle' : id === 8 ? 'diamond' : 'plus';
     name = 'shape'; option = `${k}-${sub === 16 ? 'in' : 'out'}`;
   } else {
     name = ENTR_BY_ID.get(id) ?? 'fade';

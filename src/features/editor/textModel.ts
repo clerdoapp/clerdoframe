@@ -310,3 +310,27 @@ export const charStep = (p: Paragraph, o: number, dir: -1 | 1): number => {
 
 /** Whether every paragraph in idx has some text (used to decide bullets on/off etc.). */
 export const isEmptyBody = (paras: Paragraph[]): boolean => paras.every((p) => p.runs.every((r) => !r.text && !r.br && !r.field));
+
+/** Inserts styled paragraphs (from the in-app clipboard) at a range, keeping their run and paragraph styles. */
+export const insertParas = (paras: Paragraph[], r: Range, src: Paragraph[], keepParaStyle = true): Pos => {
+  let pos = deleteRange(paras, r);
+  src.forEach((sp, i) => {
+    if (i) {
+      pos = splitParagraph(paras, pos);
+      if (keepParaStyle) { if (sp.style) paras[pos.p]!.style = structuredClone(sp.style); else delete paras[pos.p]!.style; }
+    }
+    for (const run of sp.runs) {
+      if (run.br) { pos = insertBreak(paras, pos); continue; }
+      if (run.field) {
+        const p = paras[pos.p]!;
+        const k = splitAt(p, pos.o);
+        p.runs.splice(k, 0, structuredClone(run));
+        normalizePara(p);
+        pos = { p: pos.p, o: pos.o + 1 };
+        continue;
+      }
+      pos = insertPlain(paras, pos, run.text, run.style ?? {});
+    }
+  });
+  return pos;
+};

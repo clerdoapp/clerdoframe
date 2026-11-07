@@ -147,12 +147,12 @@ export const writePptx = (deck: Deck, opts: WriteOptions = {}): Uint8Array => {
       lrels.add(REL.slideMaster, mp);
       const rid = mrels.add(REL.slideLayout, lp);
       layoutIds.push(`<p:sldLayoutId id="${masterNum + li + 1}" r:id="${rid}"/>`);
-      pw.put(lp, layoutXml(l, ctxFor(lp, lrels)), CT.layout);
+      pw.put(lp, layoutXml(l, { ...ctxFor(lp, lrels), onMaster: true }), CT.layout);
     });
     const tp = `ppt/theme/theme${++themeN}.xml`;
     pw.put(tp, themeXml(m.theme), CT.theme);
     mrels.add(REL.theme, tp);
-    const c = ctxFor(mp, mrels);
+    const c = { ...ctxFor(mp, mrels), onMaster: true };
     const ts = m.textStyles;
     const hf = m.keep?.hf ?? '';
     const xml = XML_HEAD + `<p:sldMaster ${NSDECL}><p:cSld${m.name ? ` name="${esc(m.name)}"` : ''}>${bgXml(m.background, c)}${treeXml(m.shapes, c)}</p:cSld>${CLRMAP}`

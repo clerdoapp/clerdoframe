@@ -75,9 +75,23 @@ export const readCustGeom = (cg: XNode, wEmu: number, hEmu: number, adj: Record<
         cx = ex; cy = ey;
       } else if (c.name === 'close') { d += 'Z'; cx = sx; cy = sy; }
     }
-    if (d) out.push({ d, w: w || 1, h: h || 1, ...(attr(path, 'fill') === 'none' ? { fill: false } : {}), ...(attr(path, 'stroke') === '0' || attr(path, 'stroke') === 'false' ? { stroke: false } : {}) });
+    // Coordinates are mapped into the shape's own pixel box, so the path size equals the shape size.
+    const pw = Math.max(0.01, Math.round((wEmu / 9525) * 100) / 100), ph = Math.max(0.01, Math.round((hEmu / 9525) * 100) / 100);
+    if (d) out.push({ d: scaleD(d, w ? pw / w : 1, h ? ph / h : 1), w: pw, h: ph, ...(attr(path, 'fill') === 'none' ? { fill: false } : {}), ...(attr(path, 'stroke') === '0' || attr(path, 'stroke') === 'false' ? { stroke: false } : {}) });
   }
   return out;
+};
+
+/** Scales absolute M/L/C/Q/A/Z data written by readCustGeom (arc angle and flags left alone). */
+const scaleD = (d: string, sx: number, sy: number): string => {
+  let cmd = '', i = 0;
+  return d.replace(/([MLCQAZ])|(-?\d*\.?\d+(?:e[-+]?\d+)?)/g, (m, c: string | undefined) => {
+    if (c) { cmd = c; i = 0; return c; }
+    const n = Number(m);
+    const idx = i++;
+    if (cmd === 'A') { const k = idx % 7; return k === 2 || k === 3 || k === 4 ? m : f2(n * (k === 0 || k === 5 ? sx : sy)); }
+    return f2(n * (idx % 2 === 0 ? sx : sy));
+  });
 };
 
 // ---------- Writing ----------
@@ -156,8 +170,9 @@ export const parseSvgPath = (d: string): Seg[] => {
 export const custGeomXml = (paths: { d: string; w: number; h: number }[], fills?: (boolean | undefined)[]): string => {
   const list = paths.map((p, idx) => {
     const segs = parseSvgPath(p.d);
-    const W = Math.max(1, Math.round(p.w * 100)), H = Math.max(1, Math.round(p.h * 100));
-    const k = (v: number) => Math.round(v * 100);
+    // Path units are EMU-sized so the reader's px conversion gives the same numbers back.
+    const W = Math.max(1, Math.round(p.w * 9525)), H = Math.max(1, Math.round(p.h * 9525));
+    const k = (v: number) => Math.round(v * 9525);
     const pt = (a: number, b: number) => `<a:pt x="${k(a)}" y="${k(b)}"/>`;
     const body = segs.map((s) => {
       switch (s.c) {

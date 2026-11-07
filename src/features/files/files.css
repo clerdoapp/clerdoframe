@@ -1,0 +1,16 @@
+.ftiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
+.ftiles.reuse { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); max-height: 52vh; overflow: auto; padding: 4px; margin-top: 8px; }
+.ftile { display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 8px; border: 1px solid transparent; text-align: start; font-size: 12px; min-height: 44px; }
+.ftile svg { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
+.ftile:hover, .ftile:focus-visible { background: var(--panel-2); }
+.ftile.on { border-color: var(--accent); background: var(--accent-soft); }
+.fsub { font-size: 11px; font-weight: 600; color: var(--muted); margin: 8px 0 2px; }
+.frecent { padding: 4px 8px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finfo { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 2px 0; }
+.finfo > span:last-child { text-align: end; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fexport { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 16px; min-height: 300px; }
+.fexport .flist { display: flex; flex-direction: column; overflow: auto; max-height: 60vh; border-inline-end: 1px solid var(--line); padding-inline-end: 8px; }
+.fexport .fopts { display: flex; flex-direction: column; gap: 10px; }
+.fabout { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.fabout a.tool { color: inherit; text-decoration: none; }
+@media (max-width: 640px) { .fexport { grid-template-columns: 1fr; } .fexport .flist { border: 0; max-height: 30vh; } }

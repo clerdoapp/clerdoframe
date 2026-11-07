@@ -73,6 +73,8 @@ export class FrameStore {
   painter: { kind: 'shape' | 'text'; data: unknown; sticky: boolean } | null = null;
   /** Free-form extension state for feature modules. */
   ext: Record<string, unknown> = {};
+  /** Called before every outer change, undo and redo (the text editor writes pending typing here). */
+  beforeChange = new Set<() => void>();
   private version = 0;
   private listeners = new Set<Listener>();
   private undoStack: UndoStep[] = [];
@@ -171,6 +173,7 @@ export class FrameStore {
       this.notify('This presentation is marked as final. Turn that off in File > Info to edit it.');
       throw new Error('final');
     }
+    if (this.batchDepth === 0) for (const f of this.beforeChange) f();
     const outer = this.batchDepth === 0;
     if (outer) this.batch = { label, before: snapshot(this.deck), selBefore: [...this.sel], curBefore: this.cur };
     this.batchDepth++;
@@ -230,6 +233,7 @@ export class FrameStore {
   get redoLabel(): string | null { return this.redoStack.at(-1)?.label ?? null; }
 
   undo(): void {
+    for (const f of this.beforeChange) f();
     const s = this.undoStack.pop();
     if (!s) return;
     this.redoStack.push(s);
@@ -243,6 +247,7 @@ export class FrameStore {
   }
 
   redo(): void {
+    for (const f of this.beforeChange) f();
     const s = this.redoStack.pop();
     if (!s || !s.after) return;
     this.undoStack.push(s);

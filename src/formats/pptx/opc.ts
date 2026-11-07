@@ -44,12 +44,13 @@ export class Package {
   private relCache = new Map<string, Rel[]>();
   private types: { defaults: Record<string, string>; overrides: Record<string, string> } | null = null;
 
-  constructor(data: Uint8Array) {
+  constructor(data: Uint8Array, limits: { part?: number; total?: number } = {}) {
     let total = 0, count = 0;
+    const maxPart = limits.part ?? MAX_PART, maxTotal = limits.total ?? MAX_TOTAL;
     this.files = unzipSync(data, {
       filter: (f) => {
         total += f.originalSize;
-        if (++count > MAX_PARTS || f.originalSize > MAX_PART || total > MAX_TOTAL) throw new Error('This file is too large to open.');
+        if (++count > MAX_PARTS || f.originalSize > maxPart || total > maxTotal) throw new Error('This file is too large to open.');
         // Zip-slip style names are skipped; parts are only ever looked up by resolved name.
         return !f.name.includes('..') && !f.name.endsWith('/');
       },

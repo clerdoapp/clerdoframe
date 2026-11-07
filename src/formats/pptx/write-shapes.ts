@@ -1,11 +1,11 @@
 // Writes shape trees (p:spTree) for slides, layouts and masters.
-import type { AutoShape, Chart, Diagram, Equation, Group, Hyperlink, Ink, Media, Ole, Picture, Shape, Table, Zoom } from '../../model/deck';
+import type { AutoShape, ParaStyle, Chart, Diagram, Equation, Group, Hyperlink, Ink, Media, Ole, Picture, Shape, Table, Zoom } from '../../model/deck';
 import { esc } from '../xml';
 import { chartSpaceXml, chartWorkbookFiles } from './chart';
 import { colorXml, cropXml, effectsXml, emu, fillXml, lineXml, type WriteCtx } from './dml';
 import { custGeomXml } from './geom';
 import { CT, REL, parseKeptRels, remapRels, type PackageWriter, type RelSet } from './opc';
-import { bodyPrXml, textBodyXml, type TextWriteCtx } from './text';
+import { bodyPrXml, listStyleXml, textBodyXml, type TextWriteCtx } from './text';
 import { zipSync, strToU8 } from 'fflate';
 
 export interface ShapeWriteCtx extends TextWriteCtx {
@@ -22,6 +22,8 @@ export interface ShapeWriteCtx extends TextWriteCtx {
   mediaItem: (id: string) => { path: string } | undefined;
   placeholderPoster: () => string | undefined;
   keptExists: (path: string) => boolean;
+  /** Writing a layout or master: placeholder paragraph defaults become the list style slides inherit. */
+  onMaster?: boolean;
 }
 
 /** The written id of a shape (pre-assigned for the whole tree so connectors can point forward). */
@@ -68,6 +70,19 @@ const geomXml = (s: AutoShape): string => {
   return `<a:prstGeom prst="${esc(s.geom === 'custom' ? 'rect' : s.geom || 'rect')}"><a:avLst>${adj}</a:avLst></a:prstGeom>`;
 };
 
+/** List style of a layout or master placeholder from its per-level paragraph styles. */
+const phListStyle = (s: AutoShape, c: ShapeWriteCtx): string => {
+  if (s.text?.levels?.some((l) => l && Object.keys(l).length)) return '';
+  const levels: ParaStyle[] = [];
+  for (const p of s.text?.paras ?? []) {
+    const lv = p.style?.level ?? 0;
+    if (p.style && !levels[lv]) levels[lv] = { ...p.style, level: undefined };
+  }
+  // Subtitles and section text take no bullets unless they ask for them.
+  if (s.ph && (s.ph.type === 'subTitle' || s.ph.type === 'ctrTitle' || s.ph.type === 'title') && !levels[0]?.bullet) levels[0] = { marginLeft: 0, indent: 0, ...(levels[0] ?? {}), bullet: { type: 'none' } };
+  return levels.some(Boolean) ? listStyleXml(levels, c) : '';
+};
+
 const spXml = (s: AutoShape, c: ShapeWriteCtx): string => {
   const isCxn = !!s.conn || /Connector\d?$/.test(s.geom);
   const nv = cNvPr(s, c);
@@ -93,7 +108,7 @@ const spXml = (s: AutoShape, c: ShapeWriteCtx): string => {
   }
   const locks = s.ph ? '<a:spLocks noGrp="1"/>' : '';
   const cNvSpPr = s.textbox ? '<p:cNvSpPr txBox="1"/>' : locks ? `<p:cNvSpPr>${locks}</p:cNvSpPr>` : '<p:cNvSpPr/>';
-  const tx = s.text || s.ph || s.textbox ? textBodyXml('p:txBody', s.text ?? { paras: [{ runs: [] }] }, c) : '';
+  const tx = s.text || s.ph || s.textbox ? textBodyXml('p:txBody', s.text ?? { paras: [{ runs: [] }] }, c, c.onMaster && s.ph ? phListStyle(s, c) : '') : '';
   return `<p:sp><p:nvSpPr>${nv}${cNvSpPr}${nvPr(s)}</p:nvSpPr>${spPrXml}${style}${tx}</p:sp>`;
 };
 

@@ -300,10 +300,12 @@ const guid = (): string => {
 };
 
 export const paragraphXml = (p: Paragraph, w: TextWriteCtx): string => {
-  let s = '<a:p>' + paraPropsXml('pPr', p.style ? { ...p.style, defRun: undefined } : undefined, w);
+  // Paragraph defaults are kept in pPr/defRPr and also applied to the runs, since other apps style runs only.
+  let s = '<a:p>' + paraPropsXml('pPr', p.style, w);
+  const def = p.style?.defRun;
   for (const r of p.runs) {
-    if (r.br) { s += `<a:br>${runPropsXml('rPr', r.style ?? {}, w) || '<a:rPr/>'}</a:br>`; continue; }
-    const rp = runPropsXml('rPr', { lang: 'en-US', ...(r.style ?? {}) }, w);
+    if (r.br) { s += `<a:br>${runPropsXml('rPr', { ...(def ?? {}), ...(r.style ?? {}) }, w) || '<a:rPr/>'}</a:br>`; continue; }
+    const rp = runPropsXml('rPr', { lang: 'en-US', ...(def ?? {}), ...(r.style ?? {}) }, w);
     if (r.field) {
       const type = r.field === 'slidenum' ? 'slidenum' : r.field === 'datetime' ? 'datetime1' : 'slidenum';
       fieldSeq++;
@@ -312,8 +314,9 @@ export const paragraphXml = (p: Paragraph, w: TextWriteCtx): string => {
     }
     s += `<a:r>${rp}<a:t>${esc(r.text)}</a:t></a:r>`;
   }
-  const end = p.style?.defRun ?? p.runs.at(-1)?.style;
-  s += runPropsXml('endParaRPr', { lang: 'en-US', ...(end?.size !== undefined ? { size: end.size } : {}) }, w);
+  const end = { ...(def ?? {}), ...(p.runs.at(-1)?.style ?? {}) };
+  const { link: _l, ...endStyle } = end;
+  s += runPropsXml('endParaRPr', { lang: 'en-US', ...endStyle }, w);
   return s + '</a:p>';
 };
 

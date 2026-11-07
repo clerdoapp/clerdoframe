@@ -82,10 +82,12 @@ const MIME_SNIFF = (b: Uint8Array): string | undefined => {
   return undefined;
 };
 
-export const readPptx = (data: Uint8Array): ReadResult => {
+export interface ReadOptions { limits?: { part?: number; total?: number } }
+
+export const readPptx = (data: Uint8Array, opts: ReadOptions = {}): ReadResult => {
   const warnings: string[] = [];
   const warn = (m: string) => { if (warnings.length < 200 && !warnings.includes(m)) warnings.push(m); };
-  const pkg = new Package(data);
+  const pkg = new Package(data, opts.limits);
   const rootRels = pkg.rels('');
   const mainRel = rootRels.find((r) => relType(r.type) === 'officeDocument');
   const presPath = mainRel?.target ?? 'ppt/presentation.xml';
@@ -205,6 +207,7 @@ export const readPptx = (data: Uint8Array): ReadResult => {
           const lcs = kid(lx.root, 'cSld');
           const lshapes = readTree(kid(lcs, 'spTree') ?? { name: '', attrs: {}, children: [], text: '', qn: '', s: 0, e: 0 }, lctx);
           resolveConnectors(lshapes, lctx.ids);
+          for (const s of lshapes) if (s.ph && !s.w && !s.h) fillPhBox(s, { id: '', name: '', type: '', shapes: [] }, master);
           const lbg = readBackground(lcs, lctx);
           const layout: Layout = {
             id: uid('l'), name: attr(lcs, 'name') || 'Layout', type: attr(lx.root, 'type') ?? 'cust', shapes: lshapes,
@@ -283,8 +286,12 @@ export const readPptx = (data: Uint8Array): ReadResult => {
       const comments: Comment[] = [];
       for (const r of pkg.rels(sp.path)) {
         const t = relType(r.type);
-        if (t === 'comments' && !r.external) {
-          for (const cm of kids(pkg.xml(r.target)?.root, 'cm')) {
+        if (t !== 'comments' || r.external) continue;
+        const cx = pkg.xml(r.target);
+        if (!cx || cx.root.name !== 'cmLst') continue;
+        const modern = cx.root.qn.includes(':') && !cx.root.qn.startsWith('p:') || kids(cx.root, 'cm').some((c) => !!kid(c, 'txBody'));
+        if (!modern) {
+          for (const cm of kids(cx.root, 'cm')) {
             const a = authors.get(attr(cm, 'authorId') ?? '');
             const pos = kid(cm, 'pos');
             comments.push({
@@ -292,10 +299,7 @@ export const readPptx = (data: Uint8Array): ReadResult => {
               text: kid(cm, 'text')?.text ?? '', ...(pos ? { x: ((numAttr(pos, 'x') ?? 0) * 96) / 576, y: ((numAttr(pos, 'y') ?? 0) * 96) / 576 } : {}),
             });
           }
-        } else if (t === 'comments' || /\/comments$/.test(r.type) || /modernComment/i.test(r.target)) {
-          if (r.external) continue;
-          const cx = pkg.xml(r.target);
-          if (cx?.root.name !== 'cmLst') continue;
+        } else {
           for (const cm of kids(cx.root, 'cm')) {
             if (comments.some((x) => x.text === deepText(kid(cm, 'txBody') ?? cm) && x.at === attr(cm, 'created'))) continue;
             const a = authors.get(attr(cm, 'authorId') ?? '');
@@ -412,9 +416,11 @@ export const readPptx = (data: Uint8Array): ReadResult => {
 const fillPhBox = (s: Shape, layout: Layout, master: Master): void => {
   const t = s.ph!;
   const mp = (x: string) => (x === 'ctrTitle' ? 'title' : x === 'subTitle' || x === 'obj' ? 'body' : x);
-  const src = layout.shapes.find((x) => x.ph && t.idx !== undefined && x.ph.idx === t.idx)
-    ?? layout.shapes.find((x) => x.ph && mp(x.ph.type) === mp(t.type))
-    ?? master.shapes.find((x) => x.ph && mp(x.ph.type) === mp(t.type));
+  const sized = (x: Shape) => !!x.ph && (x.w > 0 || x.h > 0);
+  const src = layout.shapes.find((x) => sized(x) && t.idx !== undefined && x.ph!.idx === t.idx)
+    ?? layout.shapes.find((x) => sized(x) && mp(x.ph!.type) === mp(t.type))
+    ?? master.shapes.find((x) => sized(x) && mp(x.ph!.type) === mp(t.type))
+    ?? (['obj', 'subTitle', 'pic', 'chart', 'tbl', 'media', 'dgm', 'clipArt'].includes(t.type) ? master.shapes.find((x) => sized(x) && x.ph!.type === 'body') : undefined);
   if (src) { s.x = src.x; s.y = src.y; s.w = src.w; s.h = src.h; }
 };
 
