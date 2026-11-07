@@ -67,7 +67,14 @@ registerKind('media', (s, ctx, _defs, o) => {
             <svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden><rect width="24" height="24" rx="4" fill="#2b0f08" opacity=".9" /><g transform="translate(4 4) scale(.667)"><path d={NOTE} fill="none" stroke="#fde8e0" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></g></svg>
           </>
         )}
-        <div className="show-media-bar" data-media-bar={s.id} />
+        <div className="show-media-bar" data-media-bar={s.id} onPointerUp={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <button type="button" aria-label="Play or pause" data-media-act="toggle"
+            onClick={(e) => { const el = (e.currentTarget.closest('[data-media]')?.querySelector('[data-media-el]') ?? null) as HTMLMediaElement | null; if (el) toggleMedia(el, s); }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden><path className="ic-play" d="M7 5l12 7-12 7z" fill="currentColor" /><path className="ic-pause" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" /></svg>
+          </button>
+          <input type="range" min={0} max={1000} defaultValue={0} aria-label="Position" data-media-act="seek"
+            onInput={(e) => { const el = (e.currentTarget.closest('[data-media]')?.querySelector('[data-media-el]') ?? null) as HTMLMediaElement | null; if (!el) return; const { start, end } = trimOf(s, el); const span = Number.isFinite(end) ? end - start : 0; if (span > 0) el.currentTime = start + (Number(e.currentTarget.value) / 1000) * span; }} />
+        </div>
       </div>
     </foreignObject>
   );
@@ -106,6 +113,8 @@ export const wireMedia = (el: El, m: Media, opts: { onState?: () => void; muted?
   el.addEventListener('timeupdate', () => {
     const sh = el.__shape!;
     const { start, end } = trimOf(sh, el);
+    const bar = el.parentElement?.querySelector<HTMLInputElement>('[data-media-act="seek"]');
+    if (bar && Number.isFinite(end) && end > start) bar.value = String(Math.round(((el.currentTime - start) / (end - start)) * 1000));
     el.volume = fadedVol(sh, el);
     if (el.currentTime >= end - 0.03) {
       if (sh.loop) { el.currentTime = start; void el.play().catch(() => undefined); }

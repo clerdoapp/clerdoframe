@@ -168,6 +168,7 @@ export const Stage = ({ c, interactive = true, transitions = true, primary = tru
   const onLayerClick = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!interactive) return;
     const t = e.target as Element;
+    if (t.closest?.('[data-media-bar]')) return;
     const mediaBox = t.closest?.('[data-media]') as HTMLElement | null;
     if (mediaBox) {
       const id = mediaBox.dataset.media!;

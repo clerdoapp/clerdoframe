@@ -142,6 +142,13 @@ export const attr = (n: XNode | undefined, name: string): string | undefined => 
   for (const k in n.attrs) if (k.endsWith(':' + name)) return n.attrs[k];
   return undefined;
 };
+/** The r:id of an element (prefix-agnostic; never the plain id attribute). */
+export const rid = (n: XNode | undefined): string | undefined => {
+  if (!n) return undefined;
+  if (n.attrs['r:id'] !== undefined) return n.attrs['r:id'];
+  for (const k in n.attrs) if (k.endsWith(':id')) return n.attrs[k];
+  return undefined;
+};
 export const numAttr = (n: XNode | undefined, name: string): number | undefined => {
   const v = attr(n, name);
   if (v === undefined || v === '') return undefined;

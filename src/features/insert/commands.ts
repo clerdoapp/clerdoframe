@@ -183,7 +183,7 @@ export const tableChange = (s: FrameStore, label: string, fn: (t: Table, rg: Cel
   const t = activeTable(s);
   if (!t) return;
   const rg = tableRange(s, t);
-  let next: void | CellRange | null;
+  let next = undefined as void | CellRange | null;
   s.tryChange(label, () => {
     const live = s.shape(t.id);
     if (live?.kind === 'table') next = fn(live, rg);
@@ -300,12 +300,12 @@ const T = (id: string, label: string, fn: (t: Table, rg: CellRange, s: FrameStor
 
 export const registerInsertCommands = (): void => {
   registerCommands([
-    { id: 'insert.picture', label: 'Pictures from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('image/*', true).then((f) => f.length && insertPictures(s, f)) },
+    { id: 'insert.picture', label: 'Pictures from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('image/*', true).then((f) => { if (f.length) void insertPictures(s, f); }) },
     { id: 'insert.files', label: 'Insert files', group: 'Insert', hidden: true, enabled: editable, run: (s, arg) => { const f = Array.isArray(arg) ? (arg as File[]) : []; if (f.length) void insertFiles(s, f); } },
     { id: 'insert.screenshot', label: 'Screenshot', group: 'Insert', enabled: (s) => editable(s) && canCapture(), run: (s) => void screenshot(s) },
     { id: 'insert.photoAlbum', label: 'Photo album…', group: 'Insert', enabled: onSlide, run: (s) => openDialog(s, 'insert.photoAlbum') },
-    { id: 'insert.video', label: 'Video from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('video/*', false).then((f) => f.length && insertMediaFiles(s, f)) },
-    { id: 'insert.audio', label: 'Audio from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('audio/*', false).then((f) => f.length && insertMediaFiles(s, f)) },
+    { id: 'insert.video', label: 'Video from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('video/*', false).then((f) => { if (f.length) void insertMediaFiles(s, f); }) },
+    { id: 'insert.audio', label: 'Audio from this device…', group: 'Insert', enabled: editable, run: (s) => void pickFiles('audio/*', false).then((f) => { if (f.length) void insertMediaFiles(s, f); }) },
     {
       id: 'insert.recordAudio', label: 'Record audio', group: 'Insert', enabled: (s) => editable(s) && canRecordAudio() && recording(s)?.kind !== 'screen', active: (s) => recording(s)?.kind === 'audio',
       run: (s) => void (recording(s) ? stopRecording(s) : startRecording(s, 'audio')),

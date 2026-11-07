@@ -435,7 +435,7 @@ const target: LayoutFn = (d, roots, B) => {
   const S = Math.min(B.h, B.w * 0.55);
   const cx = B.x + S / 2, cy = B.y + B.h / 2;
   const out: AutoShape[] = [];
-  roots.forEach((r, i) => {
+  roots.forEach((_r, i) => {
     const rad = (S / 2) * (1 - i / n);
     out.push(mk(d, { x: cx - rad, y: cy - rad, w: rad * 2, h: rad * 2 }, { geom: 'ellipse', lk: look(d, i, n), noText: true }));
   });

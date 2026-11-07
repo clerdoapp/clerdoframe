@@ -40,7 +40,7 @@ const addStroke = (s: FrameStore, stroke: InkStroke): void => {
     const abs = ink ? toSlideStrokes(ink) : [];
     abs.push(stroke);
     const b = strokeBounds(abs)!;
-    const local = abs.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [r2(x - b.x), r2(y - b.y), ...(p === undefined ? [] : [r2(p)])]) }));
+    const local = abs.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [r2(x - b.x), r2(y - b.y), ...(p === undefined ? [] : [r2(p)])] as [number, number, number?]) }));
     if (ink) { Object.assign(ink, { x: b.x, y: b.y, w: b.w, h: b.h, strokes: local }); }
     else {
       const n: Ink = { id: uid('s'), kind: 'ink', name: 'Ink', x: b.x, y: b.y, w: b.w, h: b.h, strokes: local };
@@ -58,7 +58,7 @@ export const toSlideStrokes = (ink: Ink): InkStroke[] => {
   const b = strokeBounds(ink.strokes);
   const sx = b && b.w > 1 ? ink.w / b.w : 1, sy = b && b.h > 1 ? ink.h / b.h : 1;
   const ox = b?.x ?? 0, oy = b?.y ?? 0;
-  return ink.strokes.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [ink.x + (x - ox) * sx, ink.y + (y - oy) * sy, ...(p === undefined ? [] : [p])]) }));
+  return ink.strokes.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [ink.x + (x - ox) * sx, ink.y + (y - oy) * sy, ...(p === undefined ? [] : [p])] as [number, number, number?]) }));
 };
 
 // ---------- Ink to shape ----------
@@ -115,7 +115,7 @@ export const convertInkToShapes = (s: FrameStore): number => {
       if (!keep.length) pl.list.splice(pl.list.indexOf(ink), 1);
       else {
         const b = strokeBounds(keep)!;
-        Object.assign(ink, { x: b.x, y: b.y, w: b.w, h: b.h, strokes: keep.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [x - b.x, y - b.y, ...(p === undefined ? [] : [p])]) })) });
+        Object.assign(ink, { x: b.x, y: b.y, w: b.w, h: b.h, strokes: keep.map((st) => ({ ...st, points: st.points.map(([x, y, p]): [number, number, number?] => [x - b.x, y - b.y, ...(p === undefined ? [] : [p])] as [number, number, number?]) })) });
         newSel.push(ink.id);
       }
     }
@@ -146,7 +146,7 @@ const eraseAt = (s: FrameStore, x: number, y: number, tol: number): void => {
       const pl = s.parentList(ink.id);
       if (!abs.length) { if (pl) pl.list.splice(pl.list.indexOf(ink), 1); continue; }
       const b = strokeBounds(abs)!;
-      Object.assign(ink, { x: b.x, y: b.y, w: b.w, h: b.h, strokes: abs.map((st) => ({ ...st, points: st.points.map(([px, py, p]): [number, number, number?] => [px - b.x, py - b.y, ...(p === undefined ? [] : [p])]) })) });
+      Object.assign(ink, { x: b.x, y: b.y, w: b.w, h: b.h, strokes: abs.map((st) => ({ ...st, points: st.points.map(([px, py, p]): [number, number, number?] => [px - b.x, py - b.y, ...(p === undefined ? [] : [p])] as [number, number, number?]) })) });
     }
   });
   if (live) live.erased = (live.erased ?? 0) + 1;

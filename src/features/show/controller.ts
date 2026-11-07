@@ -415,7 +415,7 @@ export class ShowController {
         s.shapes.push({
           id: `ink${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, kind: 'ink', name: `Ink ${s.shapes.length + 1}`,
           x: Math.round(x0), y: Math.round(y0), w: Math.max(1, Math.round(x1 - x0)), h: Math.max(1, Math.round(y1 - y0)),
-          strokes: strokes.map((t) => ({ ...t, points: t.points.map(([x, y, p]) => [Math.round((x - Math.round(x0)) * 10) / 10, Math.round((y - Math.round(y0)) * 10) / 10, p] as [number, number, number?]) })),
+          strokes: strokes.map((t): InkStroke => ({ ...t, points: t.points.map((pt) => { const q = [...pt] as InkStroke['points'][number]; q[0] = Math.round((pt[0] - Math.round(x0)) * 10) / 10; q[1] = Math.round((pt[1] - Math.round(y0)) * 10) / 10; return q; }) })),
         });
       }
     });

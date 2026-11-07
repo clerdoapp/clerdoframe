@@ -18,7 +18,16 @@
 .show-media { position: relative; overflow: hidden; }
 .show-media.audio { border-radius: 18%; }
 .show-media video, .show-media audio { display: block; }
-.show-media-bar { display: none; }
+.show-media-bar { display: none; position: absolute; left: 6px; right: 6px; bottom: 6px; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,.62); color: #fff; }
+.show-media-bar button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; color: #fff; background: none; border: 0; cursor: pointer; }
+.show-media-bar input { flex: 1; min-width: 0; accent-color: #ff6a3a; }
+.show-media-bar .ic-pause { display: none; }
+.show-media[data-playing='1'] .show-media-bar .ic-pause { display: inline; }
+.show-media[data-playing='1'] .show-media-bar .ic-play { display: none; }
+.show-media.audio .show-media-bar { left: -60px; right: -60px; bottom: -44px; }
+.show-overlay:not(.nomediactl) .show-media:hover .show-media-bar { display: flex; }
+@media (pointer: coarse) { .show-overlay:not(.nomediactl) .show-media:not([data-playing='1']) .show-media-bar { display: flex; } }
+.show-media, .show-media foreignObject { overflow: visible; }
 .show-overlay:not(.nomediactl) .show-media video { cursor: pointer; }
 
 .show-screen { position: absolute; inset: 0; z-index: 30; }

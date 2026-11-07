@@ -6,7 +6,7 @@ import {
   type TextBody, type TextStyles, type Theme,
 } from '../../model/deck';
 import { DEFAULT_THEME, defaultTextStyles, newDeck } from '../../model/defaults';
-import { attr, boolAttr, deepText, find, findAll, kid, kids, numAttr, type XNode } from '../xml';
+import { attr, boolAttr, rid, deepText, find, findAll, kid, kids, numAttr, type XNode } from '../xml';
 import { px, readColor, type ColorCtx } from './dml';
 import { Keeper, type KeptMeta } from './kept';
 import { MEDIA_TYPES, Package, relType, type Rel } from './opc';
@@ -124,19 +124,17 @@ export const readPptx = (data: Uint8Array): ReadResult => {
   const slideIds = kids(kid(P, 'sldIdLst'), 'sldId');
   const slidePaths: { path: string; sid: string; id: string }[] = [];
   for (const s of slideIds) {
-    const r = pkg.rel(presPath, attr(s, 'id'));
+    const r = pkg.rel(presPath, rid(s));
     if (r && !r.external && pkg.has(r.target)) slidePaths.push({ path: pkg.name(r.target)!, sid: attr(s, 'id') ?? '', id: uid('p') });
   }
-  const slideIdByNum = new Map(slideIds.map((s) => [attr(s, 'id', ) ?? '', s]));
-  void slideIdByNum;
   const slideFor = (path: string) => slidePaths.find((x) => x.path.toLowerCase() === path.toLowerCase())?.id;
   const sldIdToOurs = new Map<string, string>();
-  slideIds.forEach((s) => { const r = pkg.rel(presPath, attr(s, 'id')); const id = r ? slideFor(r.target) : undefined; if (id) sldIdToOurs.set(attr(s, 'id', ) === undefined ? '' : (s.attrs.id ?? ''), id); });
+  slideIds.forEach((s) => { const r = pkg.rel(presPath, rid(s)); const id = r ? slideFor(r.target) : undefined; if (id) sldIdToOurs.set(s.attrs.id ?? '', id); });
 
   // ---------- Masters and layouts ----------
   const layoutByPath = new Map<string, { layout: Layout; master: Master; ctx: ColorCtx; fmt: FormatScheme; theme: ThemeInfo }>();
   const masterIds = kids(kid(P, 'sldMasterIdLst'), 'sldMasterId');
-  const masterPaths = masterIds.map((m) => pkg.rel(presPath, attr(m, 'id'))).filter((r): r is Rel => !!r && !r.external).map((r) => r.target);
+  const masterPaths = masterIds.map((m) => pkg.rel(presPath, rid(m))).filter((r): r is Rel => !!r && !r.external).map((r) => r.target);
   if (!masterPaths.length) for (const r of presRels) if (relType(r.type) === 'slideMaster') masterPaths.push(r.target);
 
   const partCtx = (part: string, src: string, color: ColorCtx, fmt: FormatScheme, master: boolean): PartCtx => ({
@@ -195,7 +193,7 @@ export const readPptx = (data: Uint8Array): ReadResult => {
       if (Object.keys(keep).length) master.keep = keep;
       // Layouts in the order the master lists them.
       const lids = kids(kid(mx.root, 'sldLayoutIdLst'), 'sldLayoutId');
-      const lpaths = lids.map((l) => pkg.rel(mp, attr(l, 'id'))).filter((r): r is Rel => !!r && !r.external).map((r) => r.target);
+      const lpaths = lids.map((l) => pkg.rel(mp, rid(l))).filter((r): r is Rel => !!r && !r.external).map((r) => r.target);
       for (const r of pkg.relsOfType(mp, 'slideLayout')) if (!lpaths.includes(r.target)) lpaths.push(r.target);
       for (const lp of lpaths) {
         try {
@@ -337,7 +335,7 @@ export const readPptx = (data: Uint8Array): ReadResult => {
   // ---------- Custom shows ----------
   const shows: CustomShow[] = [];
   for (const cs of kids(kid(P, 'custShowLst'), 'custShow')) {
-    const ids = kids(kid(cs, 'sldLst'), 'sld').map((s) => { const r = pkg.rel(presPath, attr(s, 'id')); return r ? slideFor(r.target) : undefined; }).filter((x): x is string => !!x);
+    const ids = kids(kid(cs, 'sldLst'), 'sld').map((s) => { const r = pkg.rel(presPath, rid(s)); return r ? slideFor(r.target) : undefined; }).filter((x): x is string => !!x);
     shows.push({ id: attr(cs, 'id') ?? uid('cs'), name: attr(cs, 'name') ?? 'Custom show', slides: ids });
   }
   deck.customShows = shows;
