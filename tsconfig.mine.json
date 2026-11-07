@@ -1,1 +1,0 @@
-{ "extends": "./tsconfig.json", "include": ["src/vite-env.d.ts", "src/features/design", "src/features/views", "src/features/review", "src/model/themes.ts", "tests/design.*.ts", "tests/views.*.ts", "tests/review.*.ts"] }

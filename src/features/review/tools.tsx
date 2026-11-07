@@ -98,7 +98,7 @@ export const CompressDialog = ({ store, close, data }: DialogProps<{ crop?: bool
       for (const s of store.deck.slides) fix(s.shapes);
       for (const m of store.deck.masters) { fix(m.shapes); for (const l of m.layouts) fix(l.shapes); }
     });
-    store.notify(`Saved ${fmtBytes(Math.max(0, before - after))} (${fmtBytes(before)} to ${fmtBytes(after)}). Unused originals go when you run Remove unused items or save.`);
+    store.notify(`Saved ${fmtBytes(Math.max(0, before - after))} (${fmtBytes(before)} to ${fmtBytes(after)}). Undo puts the originals back.`);
     close();
   };
   return (
@@ -147,12 +147,19 @@ export const CleanupDialog = ({ store, close }: DialogProps) => {
           store.masterSel = { master: 0, layout: -1 };
         });
         // Media is outside undo, so only items nothing points at are removed, after any layout change.
-        if (media) { const now = unused(store.deck).media; for (const id of now) delete store.deck.media[id]; store.file.dirty = true; }
+        if (media) {
+          // Media is outside undo: keep anything an undo or redo step can still bring back.
+          const steps = store as unknown as { undoStack?: { before: string; after?: string }[]; redoStack?: { before: string; after?: string }[] };
+          const history = [...(steps.undoStack ?? []), ...(steps.redoStack ?? [])].map((x) => x.before + (x.after ?? '')).join('');
+          const now = unused(store.deck).media.filter((id) => !history.includes(`"${id}"`));
+          for (const id of now) delete store.deck.media[id];
+          if (now.length) store.file.dirty = true;
+        }
         store.notify('Unused items removed.');
       }}>
       <Check label={`Unused pictures and media (${u.media.length}, ${fmtBytes(size)})`} checked={media} onChange={setMedia} />
       <Check label={`Unused layouts (${u.layouts}) and masters (${u.masters})`} checked={layouts} onChange={setLayouts} />
-      <p className="muted small">Preserved masters are kept. Removing media can't be undone, but nothing on any slide, layout or undo step that still exists uses it.</p>
+      <p className="muted small">Preserved masters are kept. Media that undo could still bring back is kept.</p>
     </Dialog>
   );
 };

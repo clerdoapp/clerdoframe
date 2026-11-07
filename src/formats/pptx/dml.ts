@@ -223,32 +223,34 @@ export const readFill = (parent: XNode | undefined, c: FillCtx): Fill | undefine
 const UNDER: Record<string, ArrowKind> = { triangle: 'triangle', stealth: 'stealth', diamond: 'diamond', oval: 'oval', arrow: 'arrow', none: 'none' };
 type ArrowKind = NonNullable<Line['head']>['type'];
 
-export const readLine = (ln: XNode | undefined, c: FillCtx): Line | undefined => {
-  if (!ln) return undefined;
+/** Reads a:ln. Anything it leaves out comes from `base` (a theme line style), when given. */
+export const readLine = (ln: XNode | undefined, c: FillCtx, base?: Line): Line | undefined => {
+  if (!ln) return base ? structuredClone(base) : undefined;
   const fill = readFill(ln, c);
   const w = numAttr(ln, 'w');
-  const out: Line = { fill: fill ?? { type: 'solid', color: { theme: 'tx1' } }, width: w !== undefined ? Math.round((w / EMU_PT) * 100) / 100 : 0.75 };
-  if (!fill && w === undefined && !kid(ln, 'prstDash') && !kid(ln, 'headEnd') && !kid(ln, 'tailEnd')) {
-    // An empty <a:ln/> only sets what is given; nothing is.
-    return undefined;
-  }
+  const specified = !!fill || w !== undefined || ln.children.length > 0;
+  if (!specified && !base) return undefined;
+  const out: Line = base ? structuredClone(base) : { fill: { type: 'solid', color: { theme: 'tx1' } }, width: 0.75 };
+  if (fill) out.fill = fill;
+  if (w !== undefined) out.width = Math.round((w / EMU_PT) * 100) / 100;
   const dash = attr(kid(ln, 'prstDash'), 'val');
-  if (dash && dash !== 'solid') out.dash = dash as Dash;
+  if (dash) { if (dash === 'solid') delete out.dash; else out.dash = dash as Dash; }
   const cap = attr(ln, 'cap');
   if (cap) out.cap = cap === 'rnd' ? 'round' : cap === 'sq' ? 'square' : 'flat';
   if (kid(ln, 'round')) out.join = 'round'; else if (kid(ln, 'bevel')) out.join = 'bevel'; else if (kid(ln, 'miter')) out.join = 'miter';
   const cmpd = attr(ln, 'cmpd');
-  if (cmpd && cmpd !== 'sng') out.compound = cmpd as Line['compound'];
+  if (cmpd) { if (cmpd === 'sng') delete out.compound; else out.compound = cmpd as Line['compound']; }
   for (const end of ['headEnd', 'tailEnd'] as const) {
     const e = kid(ln, end);
+    if (!e) continue;
     const t = attr(e, 'type');
-    if (e && t && t !== 'none') {
-      const spec: NonNullable<Line['head']> = { type: UNDER[t] ?? 'triangle' };
-      const wv = attr(e, 'w'), lv = attr(e, 'len');
-      if (wv) spec.w = wv as 'sm';
-      if (lv) spec.len = lv as 'sm';
-      out[end === 'headEnd' ? 'head' : 'tail'] = spec;
-    }
+    const key = end === 'headEnd' ? 'head' : 'tail';
+    if (!t || t === 'none') { delete out[key]; continue; }
+    const spec: NonNullable<Line['head']> = { type: UNDER[t] ?? 'triangle' };
+    const wv = attr(e, 'w'), lv = attr(e, 'len');
+    if (wv) spec.w = wv as 'sm';
+    if (lv) spec.len = lv as 'sm';
+    out[key] = spec;
   }
   return out;
 };
