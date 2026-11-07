@@ -135,6 +135,8 @@ export interface TextBody {
   rot?: number;
   /** WordArt warp preset (prstTxWarp). */
   warp?: string;
+  /** List style levels 0..8 (lstStyle) from an opened file; on layout and master placeholders they set the defaults per level. */
+  levels?: ParaStyle[];
 }
 
 export interface Hyperlink {
@@ -144,6 +146,8 @@ export interface Hyperlink {
   action?: 'next' | 'prev' | 'first' | 'last' | 'end' | 'slide';
   slide?: Id;
   tooltip?: string;
+  /** Sound played when the link or action runs (media id). */
+  sound?: Id;
 }
 
 // ---------- Shapes ----------
@@ -167,8 +171,14 @@ interface ShapeBase {
   alt?: string;
   /** Marks the shape as decorative for screen readers. */
   decorative?: boolean;
+  /** Alt text title (short name read before the description). */
+  altTitle?: string;
+  /** Keep width and height in proportion when resizing. */
+  lockAspect?: boolean;
   ph?: Placeholder;
   link?: Hyperlink;
+  /** Action when the pointer rests on the shape during a show. */
+  hoverLink?: Hyperlink;
   effects?: Effects;
   /** Opaque XML kept from an opened file so saving doesn't lose what we don't edit. */
   keep?: Record<string, string>;
@@ -199,7 +209,7 @@ export interface Picture extends ShapeBase {
   /** Mask the picture to a preset geometry. */
   geom?: string;
   line?: Line;
-  adjust?: { brightness?: number; contrast?: number; saturation?: number; temperature?: number; transparency?: number; grayscale?: boolean; sepia?: boolean; blur?: number; recolor?: Color };
+  adjust?: { brightness?: number; contrast?: number; saturation?: number; temperature?: number; transparency?: number; grayscale?: boolean; sepia?: boolean; blur?: number; recolor?: Color; /** -100..100, kept as data. */ sharpness?: number };
   /** Background-removed copy, when made. */
   cutout?: Id;
 }
@@ -241,6 +251,10 @@ export interface Chart extends ShapeBase {
   axes?: { xTitle?: string; yTitle?: string; gridlines?: boolean; min?: number; max?: number };
   style?: number;
   holeSize?: number;
+  /** Colour set: 'colorful1'..'colorful4' or 'mono1'..'mono6' (one accent in shades). */
+  colors?: string;
+  /** Subtype detail, e.g. 'markers', 'filled', 'lines', 'smooth', 'ohlc', 'contour'. */
+  variant?: string;
   /** Original chart part kept for round trip. */
   rawXml?: string;
 }
@@ -266,6 +280,10 @@ export interface Media extends ShapeBase {
   fadeOut?: number;
   /** Plays on top of slides that follow (background audio). */
   acrossSlides?: boolean;
+  /** Video fills the screen while it plays in the show. */
+  fullScreen?: boolean;
+  /** Goes back to the start (poster) when it finishes. */
+  rewind?: boolean;
 }
 
 export interface InkStroke { points: [number, number, number?][]; color: Color; width: number; tool: 'pen' | 'pencil' | 'highlighter' }
@@ -351,7 +369,9 @@ export interface Animation {
 
 export interface Background { fill: Fill; hideMasterGraphics?: boolean }
 
-export interface HeaderFooter { dateTime?: boolean; dateFixed?: string; dateFormat?: string; slideNumber?: boolean; footer?: boolean; footerText?: string; hideOnTitle?: boolean }
+export interface HeaderFooter { dateTime?: boolean; dateFixed?: string; dateFormat?: string; slideNumber?: boolean; footer?: boolean; footerText?: string; hideOnTitle?: boolean;
+  /** Notes pages and handouts. */
+  notes?: { dateTime?: boolean; dateFixed?: string; dateFormat?: string; header?: boolean; headerText?: string; footer?: boolean; footerText?: string; pageNumber?: boolean } }
 
 export interface Comment { id: Id; author: string; initials?: string; at: string; text: string; x?: number; y?: number; shape?: Id; replies?: Comment[]; resolved?: boolean }
 
@@ -423,7 +443,7 @@ export interface ShowSettings {
 
 export interface MediaItem { id: Id; type: string; name: string; data: Uint8Array }
 
-export interface DeckProps { title?: string; subject?: string; author?: string; keywords?: string; description?: string; category?: string; created?: string; modified?: string; company?: string; lastModifiedBy?: string }
+export interface DeckProps { title?: string; subject?: string; author?: string; keywords?: string; description?: string; category?: string; created?: string; modified?: string; company?: string; lastModifiedBy?: string; /** Proofing language, e.g. 'en-US'. */ language?: string }
 
 export interface Deck {
   w: number;

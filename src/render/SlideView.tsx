@@ -11,6 +11,11 @@ export type KindRenderer = (s: Shape, ctx: RenderCtx, defs: Defs, opts: DrawOpts
 const kinds = new Map<string, KindRenderer>();
 export const registerKind = (kind: string, r: KindRenderer): void => { kinds.set(kind, r); };
 
+/** Draws text that has a WordArt warp (TextBody.warp); return null to fall back to normal text. */
+export type WarpRenderer = (s: AutoShape, ctx: RenderCtx) => ReactNode | null;
+let warpRenderer: WarpRenderer | null = null;
+export const registerWarpText = (r: WarpRenderer): void => { warpRenderer = r; };
+
 export interface DrawOpts {
   /** Show prompts in empty placeholders (editing only). */
   prompts: boolean;
@@ -53,13 +58,19 @@ const drawAuto = (s: AutoShape, ctx: RenderCtx, defs: Defs, o: DrawOpts): ReactN
   const hasBody = s.text && (s.text.paras.some((p) => p.runs.some((r) => r.text || r.br)) || (o.prompts && s.ph) || ctx.onMaster);
   const counter = s.flipH || s.flipV ? `scale(${s.flipH ? -1 : 1} ${s.flipV ? -1 : 1}) translate(${s.flipH ? -s.w : 0} ${s.flipV ? -s.h : 0})` : undefined;
   const textRot = s.text?.rot;
+  const warped = hasBody && s.id !== o.editing && s.text?.warp && warpRenderer ? warpRenderer(s, ctx) : null;
   return (
     <>
       {g.paths.map((p, i) => (
-        <path key={i} d={p.d} fill={p.fill === 'none' ? 'none' : shade(f, p.fill).fill} fillOpacity={p.fill === 'none' ? undefined : f.fillOpacity}
-          {...(p.stroke === false || !st ? { stroke: 'none' } : st)} {...(i === g.paths.length - 1 ? mk : {})} />
+        <g key={i}>
+          {/* Darken/lighten paths shade the shape's own fill, so the fill goes underneath. */}
+          {p.fill && p.fill !== 'none' && p.fill !== 'norm' && f.fill !== 'none' && <path d={p.d} fill={f.fill} fillOpacity={f.fillOpacity} stroke="none" />}
+          <path d={p.d} fill={p.fill === 'none' || f.fill === 'none' ? 'none' : shade(f, p.fill).fill} fillOpacity={p.fill === 'none' ? undefined : f.fillOpacity}
+            {...(p.stroke === false || !st ? { stroke: 'none' } : st)} {...(i === g.paths.length - 1 ? mk : {})} />
+        </g>
       ))}
-      {hasBody && s.id !== o.editing && (
+      {warped}
+      {hasBody && s.id !== o.editing && !warped && (
         <g transform={[counter, textRot ? `rotate(${textRot} ${s.w / 2} ${s.h / 2})` : ''].filter(Boolean).join(' ') || undefined}>
           <foreignObject x={tr.x} y={tr.y} width={Math.max(1, tr.w)} height={Math.max(1, tr.h)} style={{ overflow: 'visible' }}>
             <TextContent shape={s} body={s.text} ctx={ctx} w={tr.w} h={tr.h} prompt={o.prompts} />
@@ -151,10 +162,15 @@ const drawGroup = (g: Group, ctx: RenderCtx, defs: Defs, o: DrawOpts): ReactNode
   return <g transform={`scale(${sx} ${sy}) translate(${-cb.x} ${-cb.y})`}>{g.children.map((c) => drawShape(c, ctx, defs, o))}</g>;
 };
 
+/** Review > Hide ink: ink is left out while editing (not in the show, print or export). */
+let inkHidden = false;
+export const setInkHidden = (v: boolean): void => { inkHidden = v; };
+
 /** Draws one shape (positioned) as an SVG group. */
 export const drawShape = (s: Shape, ctx: RenderCtx, defs: Defs, o: DrawOpts): ReactNode => {
   if (s.hidden && o.mode !== 'edit') return null;
   if (s.hidden) return null;
+  if (s.kind === 'ink' && inkHidden && (o.mode === 'edit' || o.mode === 'thumb')) return null;
   let body: ReactNode;
   if (s.kind === 'shape') body = drawAuto(s, ctx, defs, o);
   else if (s.kind === 'picture') body = drawPicture(s, ctx, defs);

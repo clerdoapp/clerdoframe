@@ -1,0 +1,6 @@
+.dgmpane { display: flex; flex-direction: column; gap: 8px; }
+.dgmoutline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.dgmoutline li { display: flex; align-items: center; gap: 6px; }
+.dgmoutline li i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dgmoutline input { flex: 1; min-width: 0; height: 30px; }
+@media (pointer: coarse) { .dgmoutline input { height: 40px; } }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, screen, session, shell } from 'electron';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import { basename, extname, join, resolve } from 'node:path';
@@ -32,9 +32,26 @@ const createWindow = (file?: string): void => {
     webPreferences: { preload: join(__dirname, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false },
   });
   win.setMenuBarVisibility(false);
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  win.webContents.setWindowOpenHandler(({ url, frameName }) => {
+    // The slide show's audience window: a blank same-origin window the page renders into.
+    if (frameName === 'clerdoframe-audience' && (url === '' || url === 'about:blank')) {
+      const here = screen.getDisplayMatching(win.getBounds());
+      const other = screen.getAllDisplays().find((d) => d.id !== here.id) ?? here;
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          fullscreen: true, autoHideMenuBar: true, backgroundColor: '#000000', title: 'ClerdoFrame slide show',
+          x: other.bounds.x, y: other.bounds.y, width: other.bounds.width, height: other.bounds.height,
+          webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false },
+        },
+      };
+    }
     if (/^https?:|^mailto:/i.test(url)) void shell.openExternal(url);
     return { action: 'deny' };
+  });
+  win.webContents.on('did-create-window', (child) => {
+    child.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:|^mailto:/i.test(url)) void shell.openExternal(url); return { action: 'deny' }; });
+    child.webContents.on('will-navigate', (e) => e.preventDefault());
   });
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.webContents.on('will-prevent-unload', (e) => {

@@ -1,0 +1,15 @@
+.eqbox { display: flex; align-items: center; justify-content: center; }
+.eqmath math { font-family: inherit; }
+.eqmath { line-height: 1.2; }
+.eqitems { display: flex; flex-wrap: wrap; gap: 4px; }
+.eqbtn { min-width: 52px; min-height: 40px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); display: grid; place-items: center; }
+.eqbtn:hover, .eqsym:hover, .eqcard:hover { border-color: var(--accent-2); }
+.eqsyms { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 2px; }
+.eqsym { height: 30px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; font-family: 'Cambria Math', 'STIX Two Math', 'Times New Roman', serif; }
+.eqpreview { min-height: 84px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; padding: 10px; background: #fff; color: #000; overflow: auto; }
+.eqcommon { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; max-height: 190px; overflow: auto; }
+.eqcard { display: flex; flex-direction: column; gap: 4px; align-items: stretch; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); overflow: hidden; }
+.eqcard span { font-size: 11.5px; color: var(--muted); text-align: start; }
+.eqcard .eqmath { overflow: hidden; white-space: nowrap; }
+.field textarea { font-family: 'Cambria Math', 'STIX Two Math', 'Times New Roman', serif; font-size: 16px; }
+@media (pointer: coarse) { .eqsym { height: 40px; } .eqsyms { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); } }

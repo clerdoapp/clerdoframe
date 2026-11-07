@@ -76,7 +76,7 @@ export const mergePara = (...styles: (ParaStyle | undefined)[]): ParaStyle => {
 export const effectivePara = (s: AutoShape, para: ParaStyle | undefined, ctx: RenderCtx, phLevelStyles = true): ParaStyle => {
   const level = para?.level ?? 0;
   const chain = phChain(s, ctx).reverse();
-  const fromPh = phLevelStyles ? chain.map((p) => p.text?.paras.find((x) => (x.style?.level ?? 0) === level)?.style ?? (level === 0 ? p.text?.paras[0]?.style : undefined)) : [];
+  const fromPh = phLevelStyles ? chain.map((p) => p.text?.levels?.[level] ?? p.text?.paras.find((x) => (x.style?.level ?? 0) === level)?.style ?? (level === 0 ? p.text?.paras[0]?.style : undefined)) : [];
   const base = s.ph || s.kind === 'shape' ? listFor(s, ctx)[level] ?? listFor(s, ctx)[0] : undefined;
   const textboxDefaults: ParaStyle | undefined = !s.ph ? { bullet: { type: 'none' }, marginLeft: 0, indent: 0, defRun: { size: 18, font: '+mn-lt', color: { theme: 'tx1' } } } : undefined;
   return mergePara(base, textboxDefaults, ...fromPh.map((p) => p && { ...p, level: undefined }), para);

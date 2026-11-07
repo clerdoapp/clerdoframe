@@ -1,0 +1,12 @@
+.shapegallery { display: flex; flex-direction: column; gap: 8px; }
+.shapesearch { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 7px; padding: 0 8px; background: var(--panel); color: var(--muted); }
+.shapesearch input { border: 0; padding: 5px 0; flex: 1; background: transparent; outline: none; }
+.shapecathead { font-size: 11px; font-weight: 600; color: var(--muted); margin: 2px 0 3px; }
+.shapegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 2px; }
+.shapecell { display: grid; place-items: center; height: 34px; border-radius: 6px; color: var(--ink); border: 1px solid transparent; }
+.shapecell:hover { background: var(--panel-2); color: var(--accent); }
+.shapecell.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.shapecell.locked { box-shadow: inset 0 0 0 2px var(--accent); }
+.shapegallery.compact .shapegrid { grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); }
+@media (pointer: coarse) { .shapegrid { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); } .shapecell { height: 42px; } }
+.shapepop { position: absolute; z-index: 45; top: 100%; left: 0; width: 300px; max-height: 60vh; overflow: auto; padding: 8px; }

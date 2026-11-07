@@ -1,0 +1,50 @@
+.rv-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 24px 8px; color: var(--muted); }
+.rv-empty p { margin: 0; }
+.rv-pad { padding: 2px 8px; }
+.rv-h { font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 8px 0 4px; }
+.rv-kind { border-bottom: 1px solid var(--line); }
+.rv-khead { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 2px; font-size: 13px; font-weight: 600; text-align: start; }
+.rv-khead span:nth-child(2) { flex: 1; }
+.rv-sev.error { color: #c92a2a; }
+.rv-sev.warning { color: #d9480f; }
+.rv-sev.tip { color: #1971c2; }
+.rv-kbody { padding: 0 2px 10px 22px; display: flex; flex-direction: column; gap: 6px; }
+.rv-kbody p { margin: 0; }
+.rv-issue { display: flex; flex-direction: column; gap: 2px; }
+.rv-ilink { text-align: start; color: var(--accent); font-size: 13px; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
+.rv-spell { display: flex; flex-direction: column; gap: 8px; }
+.rv-ctx { background: var(--panel-2); border-radius: 7px; padding: 8px 10px; font-size: 13px; line-height: 1.5; }
+.rv-ctx mark { background: #ffd8a8; color: #7a2a00; border-radius: 2px; padding: 0 1px; text-decoration: underline wavy #e03131; }
+.rv-sugg { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 7px; max-height: 190px; overflow: auto; padding: 3px; }
+.rv-sugg button { text-align: start; padding: 5px 8px; border-radius: 5px; font-size: 13px; }
+.rv-sugg button:hover { background: var(--panel-2); }
+.rv-sugg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.rv-sbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.rv-sbtns button:not(.primary) { min-height: 32px; padding: 0 10px; border-radius: 7px; background: var(--panel-2); font-size: 13px; }
+.rv-comments { display: flex; flex-direction: column; gap: 10px; }
+.rv-thread { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); }
+.rv-thread.on { border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2); }
+.rv-thread.resolved { opacity: .7; }
+.rv-entry { display: flex; flex-direction: column; gap: 4px; }
+.rv-entry.reply { padding-inline-start: 14px; border-inline-start: 2px solid var(--line); }
+.rv-ehead { display: flex; align-items: center; gap: 8px; }
+.rv-av { width: 28px; height: 28px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; flex: none; }
+.rv-who { display: flex; flex-direction: column; line-height: 1.2; font-size: 13px; }
+.rv-text { margin: 0; font-size: 13.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rv-at { color: var(--accent); font-weight: 600; }
+.rv-more { position: relative; }
+.rv-emenu { right: 0; top: 100%; min-width: 160px; z-index: 46; }
+.rv-compose { display: flex; flex-direction: column; gap: 6px; }
+.rv-compose textarea { resize: vertical; min-height: 56px; }
+.rv-tfoot { justify-content: flex-end; }
+.rv-res { margin: 0; }
+.rv-link { color: var(--accent); text-decoration: underline; padding: 0; font-size: inherit; }
+.rv-stats { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.rv-stats th { text-align: start; font-weight: 500; color: var(--muted); padding: 5px 0; }
+.rv-stats td { text-align: end; font-variant-numeric: tabular-nums; }
+.rv-stats tr + tr { border-top: 1px solid var(--line); }
+.rv-keys { columns: 2 280px; column-gap: 24px; max-height: 60vh; overflow: auto; }
+.rv-keys section { break-inside: avoid; margin-bottom: 12px; }
+.rv-keys h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.rv-key { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 3px 0; }
+.rv-key kbd { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; margin-inline-start: 4px; color: var(--ink); }

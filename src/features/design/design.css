@@ -1,0 +1,50 @@
+.dz-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dz-variants { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dz-theme { display: flex; flex-direction: column; gap: 3px; padding: 3px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); font-size: 11.5px; color: var(--muted); text-align: center; }
+.dz-theme svg { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+.dz-theme:hover { border-color: var(--accent-2); color: var(--ink); }
+.dz-theme.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); color: var(--accent); font-weight: 600; }
+.dz-pop { position: relative; }
+.dz-caret { margin-inline-start: auto; color: var(--muted); }
+.dz-popup { top: 100%; left: 0; right: 0; width: auto; min-width: 0; max-height: 420px; z-index: 45; }
+
+.dz-list { display: flex; flex-direction: column; }
+.dz-list > button { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px; text-align: start; font-size: 13px; min-height: 34px; }
+.dz-list > button:hover { background: var(--accent-soft); }
+.dz-list > button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.dz-sw { display: inline-flex; flex: none; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+.dz-sw i { width: 12px; height: 18px; display: block; }
+.dz-aa { font-size: 22px; width: 38px; flex: none; text-align: center; }
+.dz-font small { color: var(--muted); }
+.dz-bgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 3px; }
+.dz-bgs button, .dz-pats button { padding: 2px; border-radius: 5px; border: 1px solid var(--line); background: var(--panel); }
+.dz-bgs button:hover, .dz-pats button:hover { border-color: var(--accent-2); }
+.dz-bgs svg, .dz-pats svg { display: block; width: 100%; height: auto; border-radius: 3px; }
+.dz-pats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.dz-pats button.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.dz-cc { display: grid; grid-template-columns: 1fr 230px; gap: 14px; align-items: start; }
+.dz-ccgrid { display: flex; flex-direction: column; gap: 3px; }
+.dz-ccrow { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+.dz-ccrow input[type='color'] { width: 30px; height: 26px; padding: 1px; border-radius: 5px; }
+.dz-ccrow code { font-size: 11px; color: var(--muted); }
+.dz-ccprev { display: flex; flex-direction: column; gap: 8px; }
+.dz-ccprev svg { border-radius: 4px; box-shadow: var(--slide-shadow); }
+@media (max-width: 600px) { .dz-cc { grid-template-columns: 1fr; } }
+.dz-fontprev { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.dz-fontprev div { font-size: 26px; }
+.dz-fontprev p { margin: 4px 0 0; font-size: 14px; }
+.dz-fit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dz-fit button { display: flex; flex-direction: column; gap: 6px; text-align: start; padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); }
+.dz-fit button:hover { border-color: var(--accent); }
+.dz-sizeprev { display: grid; place-items: center; height: 110px; background: var(--panel-2); border-radius: 8px; }
+.dz-sizeprev div { background: var(--panel); box-shadow: var(--slide-shadow); border-radius: 2px; }
+.dz-bgpane { display: flex; flex-direction: column; gap: 10px; }
+.dz-radio { display: flex; flex-direction: column; gap: 2px; }
+.dz-stops { height: 16px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+.dz-stop { display: flex; gap: 6px; align-items: flex-end; }
+.dz-ideas { display: flex; flex-direction: column; gap: 10px; }
+.dz-idea { display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); font-size: 12px; color: var(--muted); }
+.dz-idea svg { width: 100%; height: auto; border-radius: 4px; }
+.dz-idea:hover { border-color: var(--accent-2); color: var(--ink); }
+.dz-h { font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+@media (pointer: coarse) { .dz-list > button { min-height: 44px; } }

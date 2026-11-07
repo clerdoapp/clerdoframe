@@ -36,9 +36,9 @@ export const Pop = ({ label, icon: Icon, children, iconOnly, wide, width = 248, 
   }, [open]);
   return (
     <>
-      <button ref={btn} className={`tool${iconOnly ? ' icon' : ''}${wide ? ' wide' : ''}${open ? ' open' : ''}`} aria-haspopup="true" aria-expanded={open} aria-label={label} title={title ?? label} disabled={disabled}
+      <button ref={btn} className={`tool${iconOnly ? ' icon' : ''}${iconOnly && !Icon ? ' caret' : ''}${wide ? ' wide' : ''}${open ? ' open' : ''}`} aria-haspopup="true" aria-expanded={open} aria-label={label} title={title ?? label} disabled={disabled}
         onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen(!open)}>
-        {Icon && <Icon size={16} strokeWidth={S} />}{!iconOnly && <span className="grow">{label}</span>}{!iconOnly && <ChevronDown size={13} strokeWidth={S} className="muted" />}
+        {Icon ? <Icon size={16} strokeWidth={S} /> : iconOnly && <ChevronDown size={14} strokeWidth={S} />}{!iconOnly && <span className="grow">{label}</span>}{!iconOnly && <ChevronDown size={13} strokeWidth={S} className="muted" />}
       </button>
       {open && (
         <div ref={pop} className={`popup fmtpop${className ? ` ${className}` : ''}`} role="dialog" aria-label={label} onMouseDown={(e) => { if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement)) e.preventDefault(); }}

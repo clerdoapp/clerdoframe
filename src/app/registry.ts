@@ -47,13 +47,17 @@ export interface ToolHandler {
   id: string;
   /** Matches store.tool, e.g. 'pen' or a prefix like 'shape:'. */
   match: (tool: string) => boolean;
-  down: (store: FrameStore, p: { x: number; y: number; pressure: number; shift: boolean }) => void;
-  move: (store: FrameStore, p: { x: number; y: number; pressure: number; shift: boolean }) => void;
-  up: (store: FrameStore, p: { x: number; y: number; pressure: number; shift: boolean }) => void;
+  down: (store: FrameStore, p: ToolPoint) => void;
+  move: (store: FrameStore, p: ToolPoint) => void;
+  up: (store: FrameStore, p: ToolPoint) => void;
   /** Live preview while drawing, in slide px. */
   preview?: (store: FrameStore) => ReactNode;
   cursor?: string;
+  /** When present and false for a pointer type ('mouse' | 'pen' | 'touch'), the canvas handles that pointer as in select mode (pan, select). */
+  accepts?: (store: FrameStore, pointerType: string) => boolean;
 }
+/** A pointer sample in slide px. pointerType and time are optional so older callers still fit. */
+export interface ToolPoint { x: number; y: number; pressure: number; shift: boolean; pointerType?: string; time?: number }
 const tools: ToolHandler[] = [];
 export const registerTool = (t: ToolHandler): void => { if (!tools.some((x) => x.id === t.id)) tools.push(t); };
 export const toolFor = (tool: string | null): ToolHandler | undefined => (tool ? tools.find((t) => t.match(tool)) : undefined);
