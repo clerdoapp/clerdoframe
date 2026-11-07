@@ -4,7 +4,7 @@ import {
   type AutoShape, type Chart, type Color, type Diagram, type DiagramNode, type Effects, type Fill, type Group, type Hyperlink, type Line,
   type Media, type Ole, type Picture, type Placeholder, type PlaceholderType, type Shape, type Table, type TableCell, type TextBody, type ThemeColorName,
 } from '../../model/deck';
-import { attr, boolAttr, find, findAll, kid, kids, numAttr, type XNode } from '../xml';
+import { attr, boolAttr, find, findAll, kid, kids, numAttr, rid, type XNode } from '../xml';
 import { readChartPart } from './chart';
 import { colorNode, px, readColor, readCrop, readEffects, readFill, readLine, type ColorCtx, type FillCtx } from './dml';
 import { readCustGeom } from './geom';
@@ -44,7 +44,7 @@ export const readLink = (n: XNode | undefined, c: PartCtx): Hyperlink | undefine
   const jump = /jump=([a-z]+)/i.exec(action)?.[1]?.toLowerCase();
   const tip = tooltip ? { tooltip } : {};
   if (jump && ACTIONS[jump]) return { action: ACTIONS[jump], ...tip };
-  const rel = c.pkg.rel(c.part, attr(n, 'id'));
+  const rel = c.pkg.rel(c.part, rid(n));
   if (!rel) return undefined;
   if (rel.external) return SAFE.test(rel.target) ? { url: rel.target, ...tip } : undefined;
   if (action.includes('hlinksldjump') || /slides\/slide\d+\.xml$/i.test(rel.target)) {
@@ -378,7 +378,7 @@ const readGraphicFrame = (n: XNode, c: PartCtx): Shape | null => {
   const uri = attr(gd, 'uri') ?? '';
   if (uri.endsWith('/table')) { const tbl = kid(gd, 'tbl'); return tbl ? readTable(tbl, b, c) : null; }
   if (uri.endsWith('/chart')) {
-    const rel = c.pkg.rel(c.part, attr(kid(gd, 'chart'), 'id'));
+    const rel = c.pkg.rel(c.part, rid(kid(gd, 'chart')));
     const x = rel && !rel.external ? c.pkg.xml(rel.target) : undefined;
     const data = x ? readChartPart(x.root, c.color) : undefined;
     const ch: Chart = { ...b, kind: 'chart', chartType: data?.chartType ?? 'col', categories: data?.categories ?? [], series: data?.series ?? [], ...(data ?? {}) };
