@@ -175,7 +175,7 @@ const chartXml = (ch: Chart, c: ShapeWriteCtx): string => {
   const id = idFor(ch, c);
   const path = c.pw.unique('ppt/charts/', 'chart', 'xml');
   const crels = c.pw.relsFor(path);
-  const book = c.pw.unique('ppt/embeddings/', 'Microsoft_Excel_Worksheet', 'xlsx');
+  const book = c.pw.unique('ppt/embeddings/', 'Chart_Data', 'xlsx');
   const enc = chartWorkbookFiles(ch);
   const z = zipSync(Object.fromEntries(Object.entries(enc).map(([k, v]) => [k, strToU8(v)])));
   c.pw.put(book, z, CT.xlsx);

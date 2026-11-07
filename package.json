@@ -185,7 +185,7 @@
         "Name": "ClerdoFrame",
         "GenericName": "Presentation",
         "Comment": "Design and present slides",
-        "Keywords": "presentation;slides;pptx;slideshow;deck;keynote;",
+        "Keywords": "presentation;slides;pptx;slideshow;deck;",
         "StartupWMClass": "ClerdoFrame"
       }
     },
