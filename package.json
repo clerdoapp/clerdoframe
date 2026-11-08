@@ -1,7 +1,7 @@
 {
   "name": "clerdoframe",
   "productName": "ClerdoFrame",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Free, open-source presentation app by Clerdo",
   "private": true,
   "type": "module",

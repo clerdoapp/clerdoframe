@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0 — 2026-11-08
+
+- Font library: 62 more font families loaded when first used, a More fonts browser with categories, scripts and My fonts, recent fonts, and look-alikes for common system fonts
+- Smart typing: curly quotes, automatic lists and links, symbol substitutions you can edit, optional sentence capitals (Tools > Preferences)
+- Voice typing into speaker notes or slide text, with spoken punctuation
+- Special characters: emoji, symbol sets, search by name or code, and draw a character to find it
+- Checklist bullets you can tick while editing or presenting
+- New shapes: speech bubbles, thought bubble, starburst and diagonal arrow; shape gallery in four groups
+- Curve and polyline tools, edit points, change shape
+- Reflections are now drawn; picture recolouring with theme colours, replace picture, camera photos, crop to aspect ratio
+- Charts and tables from a CSV or spreadsheet file, with Update and Unlink
+- Card grid and falling steps diagram layouts, with item count and colours when inserting
+- Auto-play slide shows at a set interval, with loop
+- Publish to the web: one offline HTML page that plays the deck, plus embed code; accessible HTML view
+- Version history with named versions, restore and copies
+- Import a theme from another file; make a copy; move slides to the start or end; compact full-screen interface
+- Caption size, position and language settings
+- Assign comments to people and mark them done
+- Exports now include the fonts the slides use
+
 ## 0.5.0 — 2026-11-07
 
 First release.

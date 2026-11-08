@@ -1,6 +1,6 @@
 # Features
 
-Everything in ClerdoFrame 0.5.0. Items marked **(basic)** work but are simpler than they will be; the plan for them is in [ROADMAP.md](../ROADMAP.md).
+Everything in ClerdoFrame 0.6.0. Items marked **(basic)** work but are simpler than they will be; the plan for them is in [ROADMAP.md](../ROADMAP.md).
 
 ## Slides and views
 - New, duplicate, delete, hide, reorder (drag or keys), copy and paste slides; reuse slides from another file
@@ -25,19 +25,24 @@ Everything in ClerdoFrame 0.5.0. Items marked **(basic)** work but are simpler t
 - Links to web pages, email and slides; symbols; date, time and slide number fields; header and footer
 - Find and replace, replace fonts, format painter
 
+- Font library with more than 80 families, a More fonts browser, My fonts and recent fonts; fonts load when first used
+- Smart typing: curly quotes, automatic lists and links, editable substitutions, optional sentence capitals
+- Voice typing with spoken punctuation; checklists; special characters with emoji and draw-to-search
+
 ## Shapes and objects
 - All 187 preset shapes with adjustment handles; lines, arrows and glued connectors (straight, elbow, curved — **basic: elbow and curved connectors don't recompute their bends**)
-- Freeform and scribble drawing
+- Freeform, scribble, curve and polyline drawing; edit points; change shape
+- Speech bubbles, thought bubble, starburst and diagonal arrow
 - Fill: none, solid, gradient (linear, radial, rectangular, custom stops), picture or texture, pattern, slide background
 - Outline: colour, width, dash, compound, cap, join, arrowheads
-- Effects: shadow (outer and inner), glow, soft edges; reflection, bevel and 3D rotation are kept but not drawn yet
+- Effects: shadow (outer and inner), glow, soft edges, reflection; bevel and 3D rotation are kept but not drawn yet
 - 42 quick styles; grouping, regrouping, order, align, distribute, rotate, flip, size and position, lock aspect ratio
 - Selection pane with show, hide, lock and rename; alt text and decorative marking
-- Pictures: insert, replace placeholder, crop, brightness and contrast, saturation, temperature, recolour, transparency, picture shapes, save as picture, compress
+- Pictures: insert, replace placeholder, crop, brightness and contrast, saturation, temperature, recolour (including light and dark theme-colour versions), transparency, replace, camera photos, aspect-ratio crops, picture shapes, save as picture, compress
 - Photo album, screenshot, icon library (about 1,500 icons, recolourable)
 - Tables: 29 styles with six style options, insert and delete rows and columns, merge and split, borders, shading, cell margins, alignment, text direction, distribute
-- Charts: 19 types and 40 variations, 9 styles, 10 colour sets, quick layouts, elements, editable data grid with paste **(basic: map charts show a placeholder with the data; surface charts are flat)**
-- Diagrams: 20 layouts, text pane, 16 colour schemes, 5 styles, convert to shapes or text, convert text to a diagram
+- Charts: 19 types and 40 variations, 9 styles, 10 colour sets, quick layouts, elements, editable data grid with paste, charts and tables linked to a CSV or spreadsheet file **(basic: map charts show a placeholder with the data; surface charts are flat)**
+- Diagrams: 22 layouts, text pane, 16 colour schemes, 5 styles, convert to shapes or text, convert text to a diagram
 - Equations from linear text with a structure and symbol palette and common formulas
 - Video and audio: trim, fades, volume, start automatically, loop, rewind, full screen, play across slides, poster frame; record audio or the screen
 - Slide zoom, section zoom and summary zoom
@@ -61,11 +66,14 @@ Everything in ClerdoFrame 0.5.0. Items marked **(basic)** work but are simpler t
 - Live captions where the browser supports speech recognition
 - Hyperlinks and actions, zoom navigation, hidden slides
 
+- Auto-play at a set interval with loop; caption size, position and language
+
 ## Review
-- Comments with replies, editing, resolve and reopen, mentions, next and previous
+- Comments with replies, assignments, editing, resolve and reopen, mentions, next and previous
 - Spelling check (English) with change, ignore and a personal dictionary
 - Accessibility check: alt text, titles, contrast, reading order, table headers, empty placeholders, link text, with quick fixes
 - Word count and statistics, mark as final, inspect and remove hidden data
 
 ## Files
+- Version history with named versions; import theme; make a copy; publish to the web as one offline HTML page with embed code; accessible HTML view
 - See [file-formats.md](file-formats.md)
