@@ -16,7 +16,7 @@ export interface GeomResult {
 }
 export type GeomFn = (w: number, h: number, adj: Record<string, number>) => GeomResult;
 
-export interface PresetInfo { name: string; label: string; category: string; defaults?: Record<string, number>; fn: GeomFn; /** Open path (lines, arcs): no fill. */ line?: boolean }
+export interface PresetInfo { name: string; label: string; category: string; defaults?: Record<string, number>; fn: GeomFn; /** Open path (lines, arcs): no fill. */ line?: boolean; /** Not an ECMA-376 preset: files store it as custom geometry. */ custom?: boolean }
 
 const presets = new Map<string, PresetInfo>();
 export const registerPreset = (p: PresetInfo): void => { presets.set(p.name, p); };

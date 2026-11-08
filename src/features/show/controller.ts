@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FrameStore } from '../../app/store';
 import { desktop } from '../../app/files';
 import { findShape, type Hyperlink, type InkStroke, type Shape, type Slide } from '../../model/deck';
@@ -65,6 +66,8 @@ export class ShowController {
   zoomStack: { back: number; until: number }[] = [];
   camera = false;
   autoplay = false;
+  /** Auto-play: advance every `seconds` after the slide's animations finish. */
+  autoAdvance: { seconds: number; loop: boolean } | null = null;
   private listeners = new Set<() => void>();
   private ver = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -202,7 +205,7 @@ export class ShowController {
     const z = this.zoomStack[this.zoomStack.length - 1];
     if (z && this.pos >= z.until) { this.zoomStack.pop(); this.pos = z.back; this.enter(true, 1, true); return; }
     if (this.pos < this.order.length - 1) { this.pos++; this.enter(true, 1); return; }
-    if (this.deck.show.loop || this.kiosk) { this.pos = 0; this.enter(true, 1); return; }
+    if (this.deck.show.loop || this.kiosk || this.autoAdvance?.loop) { this.pos = 0; this.enter(true, 1); return; }
     if (this.mode === 'reading') return;
     this.ended = true;
     this.emit();
@@ -327,6 +330,7 @@ export class ShowController {
     const s = this.slide;
     if (this.autoplay) return null;
     if (!s || this.mode === 'rehearse' || this.mode === 'record') return null;
+    if (this.autoAdvance) return this.autoAdvance.seconds;
     if (this.deck.show.useTimings !== false && s.transition?.advanceAfter !== undefined) return s.transition.advanceAfter;
     if (this.deck.show.useTimings && s.timing) return s.timing;
     if (this.kiosk) return s.transition?.advanceAfter ?? s.timing ?? 5;
@@ -440,3 +444,6 @@ export class ShowController {
 }
 
 export const showOf = (store: FrameStore): ShowController | null => (store.show instanceof ShowController ? store.show : null);
+
+/** Extra controls other features add to the show's control bar. */
+export const showBarExtras: { id: string; order?: number; render: (c: ShowController) => ReactNode }[] = [];

@@ -5,9 +5,10 @@ import {
   type Media, type Ole, type Picture, type Placeholder, type PlaceholderType, type Shape, type Table, type TableCell, type TextBody, type ThemeColorName,
 } from '../../model/deck';
 import { attr, boolAttr, find, findAll, kid, kids, numAttr, rid, type XNode } from '../xml';
-import { readChartPart } from './chart';
+import { readChartPart, readDataLink } from './chart';
 import { colorNode, px, readColor, readCrop, readEffects, readFill, readLine, type ColorCtx, type FillCtx } from './dml';
-import { readCustGeom } from './geom';
+import { readCustGeom, readPresetMark } from './geom';
+import { preset } from '../../render/geometry';
 import type { Package } from './opc';
 import { readTextBody, type TextCtx } from './text';
 
@@ -153,8 +154,12 @@ const readSp = (n: XNode, c: PartCtx, groupFill?: Fill): AutoShape => {
     }
     if (Object.keys(adj).length) s.adj = adj;
   } else if (cust) {
-    const paths = readCustGeom(cust, Math.max(1, s.w * 9525), Math.max(1, s.h * 9525));
-    if (paths.length) { s.geom = 'custom'; s.path = paths.map(({ d, w, h }) => ({ d, w, h })); }
+    const mark = readPresetMark(cust);
+    if (mark && preset(mark.name)) { s.geom = mark.name; if (Object.keys(mark.adj).length) s.adj = mark.adj; }
+    else {
+      const paths = readCustGeom(cust, Math.max(1, s.w * 9525), Math.max(1, s.h * 9525));
+      if (paths.length) { s.geom = 'custom'; s.path = paths.map(({ d, w, h }) => ({ d, w, h })); }
+    }
   } else if (!s.ph) s.geom = 'rect';
   // Theme style references fill in what spPr leaves out.
   const style = kid(n, 'style');
@@ -239,6 +244,8 @@ const readPic = (n: XNode, c: PartCtx, extraMediaRel?: string): Picture | Media 
   if (crop) p.crop = crop;
   const prst = attr(kid(spPr, 'prstGeom'), 'prst');
   if (prst && prst !== 'rect') p.geom = prst;
+  const picMark = prst ? null : readPresetMark(kid(spPr, 'custGeom'));
+  if (picMark && preset(picMark.name)) p.geom = picMark.name;
   const line = readLine(kid(spPr, 'ln'), fillCtx(c));
   if (line) p.line = line;
   const fx = readEffects(kid(spPr, 'effectLst'), c.color);
@@ -260,7 +267,15 @@ const readPic = (n: XNode, c: PartCtx, extraMediaRel?: string): Picture | Media 
     if (blur !== undefined) adjust.blur = blur;
   }
   const duo = kid(blip, 'duotone');
-  if (duo) { const cols = duo.children.filter((x) => colorNode({ ...duo, children: [x] })); const last = cols.at(-1); if (last) { const col = readColor({ ...duo, children: [last] }, c.color); if (col !== undefined) adjust.recolor = col; } }
+  if (duo) {
+    const cols = duo.children.filter((x) => colorNode({ ...duo, children: [x] }));
+    const first = cols[0], last = cols.at(-1);
+    // A duotone that ends on white is a light recolor: the colour is its dark end.
+    const lastHex = last && last.name === 'srgbClr' && !last.children.length ? (attr(last, 'val') ?? '').toUpperCase() : '';
+    const light = cols.length === 2 && (lastHex === 'FFFFFF' || (last?.name === 'prstClr' && attr(last, 'val') === 'white'));
+    const pick = light ? first : last;
+    if (pick) { const col = readColor({ ...duo, children: [pick] }, c.color); if (col !== undefined) { adjust.recolor = col; if (light) adjust.recolorMode = 'light'; } }
+  }
   if (Object.keys(adjust).length) p.adjust = adjust;
   if (!media) {
     // A picture whose image is missing or external: keep the frame so layouts don't shift.
@@ -383,6 +398,8 @@ const readGraphicFrame = (n: XNode, c: PartCtx): Shape | null => {
     const data = x ? readChartPart(x.root, c.color) : undefined;
     const ch: Chart = { ...b, kind: 'chart', chartType: data?.chartType ?? 'col', categories: data?.categories ?? [], series: data?.series ?? [], ...(data ?? {}) };
     if (x) ch.rawXml = x.src.length < 4_000_000 ? x.src : undefined;
+    const link = x ? readDataLink(x.root) : undefined;
+    if (link) ch.dataLink = link;
     return ch;
   }
   if (uri.endsWith('/diagram')) return readDiagram(n, b, c);

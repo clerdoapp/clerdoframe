@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check as CheckIcon, ChevronLeft, ChevronRight, MessageSquare, MessageSquarePlus, MoreHorizontal, Pencil, RotateCcw, Trash2 } from 'lucide-react';
+import { Check as CheckIcon, CheckCheck, ChevronLeft, ChevronRight, MessageSquare, MessageSquarePlus, MoreHorizontal, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { openDialog, openPane } from '../../app/commands';
 import type { FrameStore } from '../../app/store';
 import { uid, type Comment, type Slide } from '../../model/deck';
@@ -64,17 +64,30 @@ const Mention = ({ text }: { text: string }) => (
   <>{text.split(/(@[\p{L}\p{N}._-]+)/gu).map((part, i) => (part.startsWith('@') ? <b key={i} className="rv-at">{part}</b> : <span key={i}>{part}</span>))}</>
 );
 
-const Composer = ({ onSend, onCancel, initial = '', label }: { onSend: (t: string) => void; onCancel?: () => void; initial?: string; label: string }) => {
+/** The first person mentioned with @name, without the @. */
+export const mentionIn = (text: string): string | null => /(?:^|[^\p{L}\p{N}_])@([\p{L}\p{N}._-]*[\p{L}\p{N}_])/u.exec(text)?.[1] ?? null;
+const norm = (n: string) => n.toLowerCase().replace(/^@/, '').replace(/[._-]+/g, ' ').trim();
+/** Whether an assignee name means this author (full name, or first name). */
+export const isAssignedTo = (assignee: string | undefined, author: string): boolean => {
+  if (!assignee || !author.trim()) return false;
+  const a = norm(assignee), me = norm(author);
+  return a === me || a === me.split(/\s+/)[0] || a.replace(/\s+/g, '') === me.replace(/\s+/g, '');
+};
+
+const Composer = ({ onSend, onCancel, initial = '', label, assignable }: { onSend: (t: string, assign?: string) => void; onCancel?: () => void; initial?: string; label: string; assignable?: boolean }) => {
   const [t, setT] = useState(initial);
+  const [assign, setAssign] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
-  const send = () => { const v = t.trim(); if (v) { onSend(v); setT(''); } };
+  const who = assignable ? mentionIn(t) : null;
+  const send = () => { const v = t.trim(); if (v) { onSend(v, who && assign ? who : undefined); setT(''); setAssign(false); } };
   return (
     <div className="rv-compose">
       <textarea ref={ref} value={t} aria-label={label} placeholder={`${label}. Use @name to mention someone.`} rows={2}
         onChange={(e) => setT(e.target.value)}
         onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } if (e.key === 'Escape') onCancel?.(); }} />
       <div className="rowx">
+        {who && <label className="rv-assign"><input type="checkbox" checked={assign} onChange={(e) => setAssign(e.target.checked)} /> Assign to {who}</label>}
         <div className="grow" />
         {onCancel && <button className="tool" onClick={onCancel}>Cancel</button>}
         <button className="primary" disabled={!t.trim()} onClick={send}>Post</button>
@@ -112,9 +125,14 @@ const findSlide = (s: FrameStore, c: Comment): Slide | undefined => s.deck.slide
 
 export const CommentsPane = ({ store }: { store: FrameStore }) => {
   const [showResolved, setShowResolved] = useState(true);
+  const [mine, setMine] = useState(false);
   const all = allComments(store);
   const cur = store.slide;
-  const list = (cur?.comments ?? []).filter((c) => showResolved || !c.resolved);
+  const me = getAuthor();
+  const list = mine
+    ? all.filter(([, c]) => isAssignedTo(c.assignee, me) && (showResolved || !c.resolved)).map(([, c]) => c)
+    : (cur?.comments ?? []).filter((c) => showResolved || !c.resolved);
+  const slideNo = (c: Comment) => store.deck.slides.findIndex((x) => x.comments?.includes(c)) + 1;
   const draft = store.ext.commentDraft as { slide: string; x: number; y: number; shape?: string } | undefined;
   const active = activeComment(store);
   const author = getAuthor();
@@ -137,38 +155,47 @@ export const CommentsPane = ({ store }: { store: FrameStore }) => {
         <button className="ico sm" aria-label="Previous comment" title="Previous comment" disabled={!all.length} onClick={() => go(-1)}><ChevronLeft size={16} strokeWidth={S} /></button>
         <button className="ico sm" aria-label="Next comment" title="Next comment" disabled={!all.length} onClick={() => go(1)}><ChevronRight size={16} strokeWidth={S} /></button>
       </div>
-      <label className="check small"><input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} /> Show resolved</label>
+      <div className="rowx">
+        <label className="check small"><input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} /> Show resolved</label>
+        <label className="check small" title={me ? `Comments assigned to ${me}` : 'Set your name first'}><input type="checkbox" checked={mine} disabled={!me} onChange={(e) => setMine(e.target.checked)} /> Assigned to me</label>
+      </div>
       {draft && cur && draft.slide === cur.id && (
         <div className="rv-thread on">
           <div className="rv-ehead"><Avatar name={author || '?'} /><div className="rv-who"><b>{author}</b><span className="muted small">New comment</span></div></div>
-          <Composer label="New comment" onCancel={() => { delete store.ext.commentDraft; store.emit(); }}
-            onSend={(text) => {
-              const c: Comment = { id: uid('c'), author, initials: initialsOf(author), at: new Date().toISOString(), text, x: draft.x, y: draft.y, ...(draft.shape ? { shape: draft.shape } : {}) };
+          <Composer label="New comment" assignable onCancel={() => { delete store.ext.commentDraft; store.emit(); }}
+            onSend={(text, assign) => {
+              const c: Comment = { id: uid('c'), author, initials: initialsOf(author), at: new Date().toISOString(), text, x: draft.x, y: draft.y, ...(draft.shape ? { shape: draft.shape } : {}), ...(assign ? { assignee: assign } : {}) };
               delete store.ext.commentDraft;
               mutate('New comment', () => { cur.comments = [...(cur.comments ?? []), c]; });
               focusComment(store, c.id);
             }} />
         </div>
       )}
-      {!list.length && !draft && <div className="rv-empty"><MessageSquare size={28} strokeWidth={1.6} /><p className="muted">No comments on this slide.</p>{all.length > 0 && <p className="muted small">{all.length} comment{all.length === 1 ? '' : 's'} on other slides. Use the arrows to go to them.</p>}</div>}
+      {mine && !list.length && <p className="muted small">Nothing is assigned to {me}.</p>}
+      {!mine && !list.length && !draft && <div className="rv-empty"><MessageSquare size={28} strokeWidth={1.6} /><p className="muted">No comments on this slide.</p>{all.length > 0 && <p className="muted small">{all.length} comment{all.length === 1 ? '' : 's'} on other slides. Use the arrows to go to them.</p>}</div>}
       {list.map((c) => (
-        <div key={c.id} className={`rv-thread${c.id === active ? ' on' : ''}${c.resolved ? ' resolved' : ''}`} onClick={() => { if (c.id !== active) focusComment(store, c.id); }}>
+        <div key={c.id} className={`rv-thread${c.id === active ? ' on' : ''}${c.resolved ? ' resolved' : ''}`} onClick={() => { if (mine) { const n = slideNo(c); if (n > 0 && n - 1 !== store.cur) store.goto(n - 1); } if (c.id !== active) focusComment(store, c.id); }}>
+          {mine && <span className="rv-slideref">Slide {slideNo(c)}</span>}
           <Entry store={store} c={c} onEdit={(t) => mutate('Edit comment', () => { c.text = t; })}
             onDelete={() => mutate('Delete comment', () => { const sl = findSlide(store, c); if (sl) sl.comments = sl.comments!.filter((x) => x !== c); })} />
           {(c.replies ?? []).map((r) => (
             <Entry key={r.id} store={store} c={r} reply onEdit={(t) => mutate('Edit reply', () => { r.text = t; })} onDelete={() => mutate('Delete reply', () => { c.replies = c.replies!.filter((x) => x !== r); })} />
           ))}
+          {c.assignee && <span className="rv-badge" title={`Assigned to ${c.assignee}`}>Assigned to {c.assignee}</span>}
           {c.resolved && <p className="muted small rv-res">Resolved</p>}
           <div className="rowx rv-tfoot">
+            {c.assignee && !c.resolved && (
+              <button className="tool" onClick={(e) => { e.stopPropagation(); mutate('Mark as done', () => { c.resolved = true; }); }}><CheckCheck size={14} strokeWidth={S} /> Mark as done</button>
+            )}
             <button className="tool" onClick={(e) => { e.stopPropagation(); mutate(c.resolved ? 'Reopen comment' : 'Resolve comment', () => { c.resolved = !c.resolved || undefined; }); }}>
               {c.resolved ? <><RotateCcw size={14} strokeWidth={S} /> Reopen</> : <><CheckIcon size={14} strokeWidth={S} /> Resolve</>}
             </button>
           </div>
           {c.id === active && !c.resolved && (
-            <Composer label="Reply" onSend={(text) => {
+            <Composer label="Reply" assignable onSend={(text, assign) => {
               if (!getAuthor()) { openDialog(store, 'review.author'); return; }
               const a = getAuthor();
-              mutate('Reply', () => { c.replies = [...(c.replies ?? []), { id: uid('c'), author: a, initials: initialsOf(a), at: new Date().toISOString(), text }]; });
+              mutate('Reply', () => { c.replies = [...(c.replies ?? []), { id: uid('c'), author: a, initials: initialsOf(a), at: new Date().toISOString(), text }]; if (assign) c.assignee = assign; });
             }} />
           )}
         </div>

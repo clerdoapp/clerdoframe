@@ -3,7 +3,15 @@ import type { AutoShape, ParaStyle, Chart, Diagram, Equation, Group, Hyperlink, 
 import { esc } from '../xml';
 import { chartSpaceXml, chartWorkbookFiles } from './chart';
 import { colorXml, cropXml, effectsXml, emu, fillXml, lineXml, type WriteCtx } from './dml';
-import { custGeomXml } from './geom';
+import { custGeomXml, presetCustGeomXml } from './geom';
+import { geometry, preset } from '../../render/geometry';
+
+/** Our own presets (not in ECMA-376) are written as custom geometry so other apps draw them. */
+const ownPresetXml = (geom: string | undefined, w: number, h: number, adj?: Record<string, number>): string | null => {
+  if (!geom || !preset(geom)?.custom) return null;
+  const g = geometry(geom, w, h, adj ?? {});
+  return g.paths.length ? presetCustGeomXml(geom, adj, g.paths, w, h, g.text) : null;
+};
 import { CT, REL, parseKeptRels, remapRels, type PackageWriter, type RelSet } from './opc';
 import { bodyPrXml, listStyleXml, textBodyXml, type TextWriteCtx } from './text';
 import { zipSync, strToU8 } from 'fflate';
@@ -66,6 +74,8 @@ const nvPr = (s: Shape, extra = ''): string => {
 
 const geomXml = (s: AutoShape): string => {
   if (s.geom === 'custom' && s.path?.length) return custGeomXml(s.path);
+  const own = ownPresetXml(s.geom, s.w, s.h, s.adj);
+  if (own) return own;
   const adj = s.adj && Object.keys(s.adj).length ? Object.entries(s.adj).map(([k, v]) => `<a:gd name="${esc(k)}" fmla="val ${Math.round(v)}"/>`).join('') : '';
   return `<a:prstGeom prst="${esc(s.geom === 'custom' ? 'rect' : s.geom || 'rect')}"><a:avLst>${adj}</a:avLst></a:prstGeom>`;
 };
@@ -116,6 +126,7 @@ const blipXml = (rid: string, p?: Picture): string => {
   const a = p?.adjust;
   let inner = '';
   if (a?.transparency) inner += `<a:alphaModFix amt="${Math.round((1 - a.transparency / 100) * 100000)}"/>`;
+  if (a?.recolor !== undefined) inner += a.recolorMode === 'light' ? `<a:duotone>${colorXml(a.recolor)}<a:srgbClr val="FFFFFF"/></a:duotone>` : `<a:duotone><a:srgbClr val="000000"/>${colorXml(a.recolor)}</a:duotone>`;
   if (a?.grayscale) inner += '<a:grayscl/>';
   if (a?.brightness || a?.contrast) inner += `<a:lum${a.brightness ? ` bright="${Math.round(a.brightness * 1000)}"` : ''}${a.contrast ? ` contrast="${Math.round(a.contrast * 1000)}"` : ''}/>`;
   return inner ? `<a:blip r:embed="${rid}">${inner}</a:blip>` : `<a:blip r:embed="${rid}"/>`;
@@ -125,7 +136,7 @@ const picXml = (p: Picture, c: ShapeWriteCtx): string => {
   const rid = c.mediaRel(p.cutout ?? p.media);
   const nv = `<p:nvPicPr>${cNvPr(p, c)}<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>${nvPr(p)}</p:nvPicPr>`;
   const fill = rid ? `<p:blipFill>${blipXml(rid, p)}${cropXml(p.crop)}<a:stretch><a:fillRect/></a:stretch></p:blipFill>` : '<p:blipFill><a:blip/><a:stretch><a:fillRect/></a:stretch></p:blipFill>';
-  return `<p:pic>${nv}${fill}<p:spPr>${off(p)}<a:prstGeom prst="${esc(p.geom ?? 'rect')}"><a:avLst/></a:prstGeom>${lineXml(p.line, c)}${effectsXml(p.effects)}</p:spPr></p:pic>`;
+  return `<p:pic>${nv}${fill}<p:spPr>${off(p)}${ownPresetXml(p.geom, p.w, p.h) ?? `<a:prstGeom prst="${esc(p.geom ?? 'rect')}"><a:avLst/></a:prstGeom>`}${lineXml(p.line, c)}${effectsXml(p.effects)}</p:spPr></p:pic>`;
 };
 
 const mediaXml = (m: Media, c: ShapeWriteCtx): string => {

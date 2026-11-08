@@ -3,6 +3,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Deck, Slide } from '../model/deck';
+import { fontHooks } from '../render/inherit';
 import { mediaUrl } from '../render/paint';
 import { SlideView } from '../render/SlideView';
 
@@ -13,27 +14,41 @@ const b64 = (u: Uint8Array): string => {
 };
 
 let fontCss: Promise<string> | null = null;
+let fontRuleCount = -1;
+const countFontRules = (): number => {
+  let n = 0;
+  for (const sheet of Array.from(document.styleSheets)) { try { for (const r of Array.from(sheet.cssRules)) if (r instanceof CSSFontFaceRule) n++; } catch { /* other origin */ } }
+  return n;
+};
+/** Keeps only the @font-face rules for families the markup names. */
+const usedFontRules = (css: string, markup: string): string =>
+  css.split(/(?=@font-face)/).filter((r) => { const fam = /font-family:\s*["']?([^"';]+?)["']?\s*;/.exec(r)?.[1]; return !fam || markup.includes(fam); }).join('');
 
 /** @font-face rules of the page with their font files inlined (fetched from our own origin only). */
-const inlineFonts = (): Promise<string> => {
+export const inlineFonts = (): Promise<string> => {
+  // Fonts loaded since the last pass (the font library loads them on first use) need a new pass.
+  const n = countFontRules();
+  if (n !== fontRuleCount) { fontRuleCount = n; fontCss = null; }
   fontCss ??= (async () => {
-    const rules: string[] = [];
+    const rules: [string, string][] = [];
     for (const sheet of Array.from(document.styleSheets)) {
       let list: CSSRuleList;
       try { list = sheet.cssRules; } catch { continue; }
-      for (const r of Array.from(list)) if (r instanceof CSSFontFaceRule) rules.push(r.cssText);
+      // url()s are relative to the stylesheet, not the page.
+      for (const r of Array.from(list)) if (r instanceof CSSFontFaceRule) rules.push([r.cssText, sheet.href ?? location.href]);
     }
     const urlRe = /url\(["']?([^"')]+)["']?\)/g;
     const out: string[] = [];
-    for (const rule of rules) {
+    for (const [rule, base] of rules) {
       // Only latin subsets: keeps the image small.
-      if (/unicode-range/.test(rule) && !/U\+0000-00FF/i.test(rule)) continue;
+      // Browsers may write the range short (U+0-FF).
+      if (/unicode-range/.test(rule) && !/U\+0{1,4}-0{0,2}FF\b/i.test(rule)) continue;
       let css = rule;
       for (const m of rule.matchAll(urlRe)) {
         const href = m[1]!;
         if (href.startsWith('data:')) continue;
         let abs: URL;
-        try { abs = new URL(href, location.href); } catch { continue; }
+        try { abs = new URL(href, base); } catch { continue; }
         if (abs.origin !== location.origin) { css = ''; break; }
         try {
           const r = await fetch(abs.href);
@@ -60,7 +75,8 @@ export const slideSvg = async (deck: Deck, slide: Slide, width: number, opts: { 
   }
   if (!svg.includes('xmlns:xlink')) svg = svg.replace('<svg ', '<svg xmlns:xlink="http://www.w3.org/1999/xlink" ');
   if (opts.fonts !== false) {
-    const css = await inlineFonts();
+    if (fontHooks.beforeExport) await fontHooks.beforeExport(deck).catch(() => undefined);
+    const css = usedFontRules(await inlineFonts(), svg);
     if (css) svg = svg.replace(/(<svg[^>]*>)/, `$1<style>${esc(css)}</style>`);
   }
   return svg;

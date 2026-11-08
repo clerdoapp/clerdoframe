@@ -263,6 +263,7 @@ export const chartSpaceXml = (c: Chart, opts: { workbookRel?: string } = {}): st
     + `<c:plotArea><c:layout/>${body}${axes}</c:plotArea>${legend}${v('plotVisOnly', 1)}${v('dispBlanksAs', 'gap')}</c:chart>`
     + '<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1400"/></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr>'
     + (opts.workbookRel ? `<c:externalData r:id="${opts.workbookRel}"><c:autoUpdate val="0"/></c:externalData>` : '')
+    + dataLinkXml(c)
     + '</c:chartSpace>';
 };
 
@@ -289,4 +290,26 @@ export const chartWorkbookFiles = (c: Chart): Record<string, string> => {
     'xl/_rels/workbook.xml.rels': `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
     'xl/worksheets/sheet1.xml': `${H}<worksheet xmlns="${S}"><sheetData>${rows.join('')}</sheetData></worksheet>`,
   };
+};
+
+// ---------- Link to the spreadsheet file the data came from (our own extension; other apps skip it) ----------
+
+const LINK_URI = '{6F3B7E52-0C1D-4C55-9A57-3C1A2E7D9B10}';
+const LINK_NS = 'urn:clerdo:frame:chart-link';
+
+const dataLinkXml = (c: Chart): string => {
+  const l = c.dataLink;
+  if (!l?.file) return '';
+  const a = `file="${esc(l.file)}"${l.sheet ? ` sheet="${esc(l.sheet)}"` : ''}${l.range ? ` range="${esc(l.range)}"` : ''}`;
+  return `<c:extLst><c:ext uri="${LINK_URI}" xmlns:cfl="${LINK_NS}"><cfl:dataLink ${a}/></c:ext></c:extLst>`;
+};
+
+/** The data link written by dataLinkXml, if the chart part has one. */
+export const readDataLink = (root: XNode): Chart['dataLink'] | undefined => {
+  const ext = kids(kid(root, 'extLst'), 'ext').find((e) => attr(e, 'uri') === LINK_URI);
+  const n = kid(ext, 'dataLink');
+  const file = attr(n, 'file');
+  if (!file) return undefined;
+  const sheet = attr(n, 'sheet'), range = attr(n, 'range');
+  return { file: file.slice(0, 500), ...(sheet ? { sheet: sheet.slice(0, 200) } : {}), ...(range && /^[A-Za-z]{1,3}\d+(:[A-Za-z]{1,3}\d+)?$/.test(range) ? { range } : {}) };
 };

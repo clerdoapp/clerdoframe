@@ -9,7 +9,7 @@ const titleish = (t: string) => t === 'title' || t === 'ctrTitle';
 const bodyish = (t: string) => t === 'body' || t === 'obj' || t === 'subTitle';
 
 /** Layout type to fall back to when the new master has no layout of a slide's type. */
-const fallbackType = (t: string): string => {
+export const fallbackType = (t: string): string => {
   if (t === 'title' || t === 'secHead' || t === 'blank' || t === 'titleOnly') return t;
   if (t === 'twoObj' || t === 'twoTxTwoObj' || t === 'txAndObj' || t === 'objAndTx') return 'twoObj';
   if (t === 'picTx' || t === 'objTx') return t;
@@ -32,7 +32,7 @@ const matchPh = (list: Shape[], s: Shape): Shape | undefined => {
 const near = (a: Shape, b: Shape) => Math.abs(a.x - b.x) < 3 && Math.abs(a.y - b.y) < 3 && Math.abs(a.w - b.w) < 3 && Math.abs(a.h - b.h) < 3;
 
 /** Moves a slide onto a new layout, keeping its content. Placeholders the person hadn't moved follow the new layout. */
-const moveSlide = (slide: Slide, from: Layout | null, to: Layout): void => {
+export const moveSlide = (slide: Slide, from: Layout | null, to: Layout): void => {
   for (const s of slide.shapes) {
     if (!s.ph) continue;
     const target = matchPh(to.shapes, s);

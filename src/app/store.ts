@@ -75,6 +75,8 @@ export class FrameStore {
   ext: Record<string, unknown> = {};
   /** Called before every outer change, undo and redo (the text editor writes pending typing here). */
   beforeChange = new Set<() => void>();
+  /** Called after a document is loaded (opened, new, restored draft). */
+  afterLoad = new Set<() => void>();
   private version = 0;
   private listeners = new Set<Listener>();
   private undoStack: UndoStep[] = [];
@@ -111,6 +113,7 @@ export class FrameStore {
     this.masterSel = { master: 0, layout: 0 };
     this.view.mode = 'normal';
     this.file = { name: name.replace(/\.(pptx|ppsx|potx|pptm|odp|cfrm|json)$/i, ''), path, dirty: false, lastSaved: null, handle };
+    for (const f of this.afterLoad) f();
     this.emit();
   }
 

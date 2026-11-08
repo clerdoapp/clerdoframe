@@ -3,7 +3,7 @@ import type { AutoShape, Background, Deck, Group, Layout, Master, Picture, Shape
 import { css, type ColorCtx } from './color';
 import { geometry, isLineGeom } from './geometry';
 import { effectiveBody, phChain, type RenderCtx } from './inherit';
-import { Defs, effectFilter, markers, mediaUrl, paint, strokeOf, type Paint } from './paint';
+import { Defs, duotoneFilter, effectFilter, markers, mediaUrl, paint, reflectionOf, strokeOf, type Paint } from './paint';
 import { TextContent } from './text';
 
 /** Renderers for shape kinds that live in feature modules (charts, diagrams, media, ink, equations...). */
@@ -107,10 +107,11 @@ const drawPicture = (p: Picture, ctx: RenderCtx, defs: Defs): ReactNode => {
   const g = geometry(p.geom ?? 'rect', p.w, p.h);
   const st = strokeOf(p.line, { theme: ctx.theme }, ctx.deck, defs);
   defs.add(<clipPath key={clip} id={clip}>{g.paths.map((x, i) => <path key={i} d={x.d} />)}</clipPath>);
+  const duo = p.adjust?.recolor !== undefined ? duotoneFilter(p.adjust.recolor, p.adjust.recolorMode, { theme: ctx.theme }, defs) : undefined;
   return (
     <>
       <g clipPath={`url(#${clip})`}>
-        {url ? <image href={url} x={-c.l * iw} y={-c.t * ih} width={iw} height={ih} preserveAspectRatio="none" opacity={1 - (p.adjust?.transparency ?? 0) / 100} style={{ filter: filterFor(p) }} />
+        {url ? <g filter={duo}><image href={url} x={-c.l * iw} y={-c.t * ih} width={iw} height={ih} preserveAspectRatio="none" opacity={1 - (p.adjust?.transparency ?? 0) / 100} style={{ filter: filterFor(p) }} /></g>
           : <rect width={p.w} height={p.h} fill="#e6e7ea" />}
       </g>
       {st && g.paths.map((x, i) => <path key={`o${i}`} d={x.d} fill="none" {...st} />)}
@@ -181,6 +182,8 @@ export const drawShape = (s: Shape, ctx: RenderCtx, defs: Defs, o: DrawOpts): Re
     body = r ? r(s, ctx, defs, o) : <rect width={s.w} height={s.h} fill="#f1f2f4" stroke="#c4c8cf" />;
   }
   const filter = effectFilter(s.effects, { theme: ctx.theme }, defs);
+  const mirror = s.effects?.reflection ? reflectionOf(s.effects, s.w, s.h, body, defs) : null;
+  if (mirror) return <g key={s.id} data-shape={s.id} transform={transform(s)}>{mirror}<g filter={filter}>{body}</g></g>;
   const node = <g key={s.id} data-shape={s.id} transform={transform(s)} filter={filter}>{body}</g>;
   return node;
 };

@@ -10,3 +10,6 @@
 .shapegallery.compact .shapegrid { grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); }
 @media (pointer: coarse) { .shapegrid { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); } .shapecell { height: 42px; } }
 .shapepop { position: absolute; z-index: 45; top: 100%; left: 0; width: 300px; max-height: 60vh; overflow: auto; padding: 8px; }
+.shapeview { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
+.shapeview button { flex: 1; padding: 3px 6px; border-radius: 5px; font-size: 11.5px; color: var(--muted); border: 0; background: transparent; }
+.shapeview button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }

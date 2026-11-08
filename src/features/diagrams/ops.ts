@@ -8,10 +8,12 @@ export const DIAGRAM_LAYOUTS: { id: DiagramLayout; label: string; group: Diagram
   { id: 'basicList', label: 'Blocks', group: 'List' },
   { id: 'verticalList', label: 'Stacked list', group: 'List' },
   { id: 'target', label: 'Target list', group: 'List' },
+  { id: 'grid', label: 'Card grid', group: 'List' },
   { id: 'process', label: 'Steps', group: 'Process' },
   { id: 'chevronProcess', label: 'Chevrons', group: 'Process' },
   { id: 'bendingProcess', label: 'Bending steps', group: 'Process' },
   { id: 'stepUp', label: 'Rising steps', group: 'Process' },
+  { id: 'stepsDown', label: 'Falling steps', group: 'Process' },
   { id: 'timeline', label: 'Timeline', group: 'Process' },
   { id: 'arrowRibbon', label: 'Opposing arrows', group: 'Process' },
   { id: 'cycle', label: 'Cycle', group: 'Cycle' },
@@ -44,6 +46,8 @@ export const sampleNodes = (layout: DiagramLayout): DiagramNode[] => {
     case 'timeline': return [N('2023'), N('Launch', 1), N('2024'), N('Grow', 1), N('2025'), N('Expand', 1), N('2026'), N('Lead', 1)];
     case 'cycle': return [N('Plan'), N('Do'), N('Check'), N('Act'), N('Learn')];
     case 'pictureList': return [N('Mountains'), N('Coast'), N('Cities')];
+    case 'grid': return [N('Plan'), N('Set the goal', 1), N('Build'), N('Make it work', 1), N('Test'), N('Check with users', 1), N('Ship'), N('Release it', 1)];
+    case 'stepsDown': return [N('Start'), N('Prepare'), N('Run'), N('Review')];
     default: return [N('First'), N('Second'), N('Third'), N('Fourth'), N('Fifth')];
   }
 };
@@ -51,6 +55,20 @@ export const sampleNodes = (layout: DiagramLayout): DiagramNode[] => {
 export const newDiagram = (layout: DiagramLayout, box: { x: number; y: number; w: number; h: number }): Diagram => ({
   id: uid('s'), kind: 'diagram', name: 'Diagram', ...box, layout, nodes: sampleNodes(layout), colorScheme: 'primary', styleName: 'flat',
 });
+
+/** Keeps the first `n` top-level items (with their sub-items), adding numbered ones when there are fewer. */
+export const withItemCount = (nodes: DiagramNode[], n: number): DiagramNode[] => {
+  const want = Math.max(1, Math.min(30, Math.round(n)));
+  const out: DiagramNode[] = [];
+  let roots = 0;
+  for (const x of nodes) {
+    if (x.level === 0) roots++;
+    if (roots > want) break;
+    out.push(x);
+  }
+  for (let k = roots; k < want; k++) out.push(N(`Item ${k + 1}`));
+  return out;
+};
 
 /** Anything edited drops the cached drawing from an opened file. */
 export const touched = (d: Diagram): void => { delete d.cached; };

@@ -32,6 +32,16 @@ export interface Session {
 
 let cur: Session | null = null;
 export const session = (): Session | null => cur;
+
+/** Hooks for typing aids (automatic substitutions, lists, links) registered by other features. */
+export const typingHooks: {
+  /** After text was typed at the caret. */
+  afterType?: (s: Session, text: string) => void;
+  /** Before Enter splits the paragraph. */
+  beforeParagraph?: (s: Session) => void;
+  /** Caret to use after undo or redo while editing; null keeps the current one. */
+  undoCaret?: (s: Session, redo: boolean) => Range | null;
+} = {};
 export const sameEdit = (a: TextEdit | null | undefined, b: TextEdit | null | undefined): boolean =>
   !!a && !!b && a.shape === b.shape && a.cell?.r === b.cell?.r && a.cell?.c === b.cell?.c;
 

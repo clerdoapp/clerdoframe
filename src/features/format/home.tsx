@@ -3,7 +3,7 @@ import {
   AArrowDown, AArrowUp, ALargeSmall, AlignCenter, AlignJustify, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart,
   ArrowRightLeft, Baseline, Bold, BringToFront, ClipboardPaste, Columns2, Copy, FolderPlus, Highlighter, IndentDecrease, IndentIncrease, Italic, LayoutTemplate, Layers,
   List, ListOrdered, MousePointer2, MoveVertical, PaintBucket, Paintbrush, PenLine, Plus, Redo2, RemoveFormatting, Replace, RotateCcw, Scissors, Search, Shapes,
-  Sparkles, Strikethrough, Subscript, Superscript, Type, Underline, Undo2, Workflow, type LucideIcon,
+  PenTool, Sparkles, Strikethrough, Subscript, Superscript, Type, Underline, Undo2, Waypoints, Workflow, type LucideIcon,
 } from 'lucide-react';
 import { command, run } from '../../app/commands';
 import { registerPanelSection } from '../../app/registry';
@@ -13,7 +13,7 @@ import { allPresets } from '../../render/geometry';
 import { css } from '../../render/color';
 import { SlideView } from '../../render/SlideView';
 import { autoNumberText } from '../../render/text';
-import { FONT_NAMES } from '../../ui/fonts';
+import { FONT_NAMES, fontMenu } from '../../ui/fonts';
 import { Btn, ColorButton, ColorGrid, Row, S } from '../../ui/kit';
 import { FONT_SIZES, hasText, paraStyle, runStyle, textBody, tx, txActive } from './bridge';
 import { QUICK_STYLE_COUNT, quickStyle, topSelected } from './ops';
@@ -106,7 +106,9 @@ const FontPicker = ({ store }: { store: FrameStore }) => {
   return (
     <div className="fontctl">
       <select aria-label="Font" value={font.startsWith('+mj') ? '+mj-lt' : font.startsWith('+mn') ? '+mn-lt' : font} disabled={!enabled}
-        onChange={(e) => tx(store, 'text.font', e.target.value)}>
+        onChange={(e) => { const v = e.target.value; if (v === '\u0000more') { if (fontMenu.more) run(store, fontMenu.more); return; } fontMenu.picked(v); tx(store, 'text.font', v); }}>
+        {fontMenu.more && command(fontMenu.more) && <option value={'\u0000more'}>More fonts…</option>}
+        {fontMenu.groups().filter((g) => g.fonts.length).map((g) => <optgroup key={g.label} label={g.label}>{g.fonts.map((f) => <option key={f} value={f}>{f}</option>)}</optgroup>)}
         <optgroup label="Theme fonts">
           <option value="+mj-lt">{theme.fonts.major} (Headings)</option>
           <option value="+mn-lt">{theme.fonts.minor} (Body)</option>
@@ -183,6 +185,7 @@ export const BULLET_CHARS: { char: string; font?: string; label: string }[] = [
   { char: '★', font: 'Arial', label: 'Star' },
   { char: '→', font: 'Arial', label: 'Right arrow' },
   { char: '○', font: 'Arial', label: 'Circle' },
+  { char: '☐', label: 'Checklist' },
 ];
 export const NUMBER_SCHEMES: AutoNumber[] = ['arabicPeriod', 'arabicParenR', 'arabicParenBoth', 'alphaUcPeriod', 'alphaLcParenR', 'alphaLcPeriod', 'romanUcPeriod', 'romanLcPeriod', 'arabicPlain'];
 
@@ -287,16 +290,20 @@ const applyRtl = (s: FrameStore, rtl: boolean) => {
 
 const QUICK_SHAPES: [string, string][] = [
   ['textbox', 'Text box'], ['rect', 'Rectangle'], ['roundRect', 'Rounded rectangle'], ['ellipse', 'Oval'], ['triangle', 'Triangle'], ['rtTriangle', 'Right triangle'],
-  ['line', 'Line'], ['straightConnector1', 'Arrow'], ['rightArrow', 'Right arrow'], ['pentagon', 'Pentagon arrow'], ['star5', 'Star'], ['wedgeRectCallout', 'Callout'],
+  ['line', 'Line'], ['straightConnector1', 'Arrow'], ['tool:curve', 'Curve'], ['tool:polyline', 'Polyline'], ['rightArrow', 'Right arrow'], ['pentagon', 'Pentagon arrow'], ['star5', 'Star'], ['wedgeRectCallout', 'Callout'],
   ['hexagon', 'Hexagon'], ['diamond', 'Diamond'], ['leftBrace', 'Brace'], ['flowChartProcess', 'Process'],
 ];
 
 const QuickShapes = ({ store: s }: { store: FrameStore }) => {
   const known = new Set(allPresets().map((p) => p.name));
-  const shapes = QUICK_SHAPES.filter(([g]) => g === 'textbox' || known.has(g)).slice(0, 12);
+  const shapes = QUICK_SHAPES.filter(([g]) => g === 'textbox' || known.has(g) || (g.startsWith('tool:') && command(`draw.${g.slice(5)}`))).slice(0, 14);
   return (
     <div className="gallery sm fmtshapes">
-      {shapes.map(([g, label]) => (
+      {shapes.map(([g, label]) => g.startsWith('tool:') ? (
+        <button key={g} title={label} aria-label={label} className={command(`draw.${g.slice(5)}`)?.active?.(s) ? 'on' : ''} onClick={() => run(s, `draw.${g.slice(5)}`)}>
+          {g === 'tool:curve' ? <PenTool size={18} strokeWidth={S} style={{ margin: '3px auto' }} /> : <Waypoints size={18} strokeWidth={S} style={{ margin: '3px auto' }} />}
+        </button>
+      ) : (
         <button key={g} title={label} aria-label={label} className={s.tool === (g === 'textbox' ? 'text' : `shape:${g}`) ? 'on' : ''}
           onClick={() => (g === 'textbox' ? (command('insert.textbox') ? run(s, 'insert.textbox') : setTool(s, 'text')) : command('insert.shape') ? run(s, 'insert.shape', g) : setTool(s, `shape:${g}`))}>
           {g === 'textbox' ? <Type size={18} strokeWidth={S} style={{ margin: '3px auto' }} /> : <Swatch store={s} geom={g} w={28} h={24} fill={{ type: 'none' }} line={{ fill: { type: 'solid', color: '#6f5d57' }, width: 1 }} />}

@@ -70,3 +70,16 @@ export class Keeper {
     writeMeta(deck, this.meta);
   }
 }
+
+// ---------- Our own extra data ----------
+
+/**
+ * Data ClerdoFrame keeps that the file format has no place for (document id, comment assignees...).
+ * Each extra is written to its own custom XML part, customXml/clerdoframe-<id>.xml, related from the presentation part.
+ */
+export interface PptxExtra { id: string; write: (deck: Deck) => string | null; read: (deck: Deck, xml: string) => void }
+const extras: PptxExtra[] = [];
+export const registerPptxExtra = (x: PptxExtra): void => { const i = extras.findIndex((e) => e.id === x.id); if (i >= 0) extras[i] = x; else extras.push(x); };
+export const pptxExtras = (): PptxExtra[] => extras;
+export const EXTRA_PART = /^customXml\/clerdoframe-([\w-]+)\.xml$/;
+export const REL_CUSTOM_XML = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml';

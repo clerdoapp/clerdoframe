@@ -218,7 +218,8 @@ const freeformTool: ToolHandler = {
   cursor: 'crosshair',
   down: (s, p) => {
     const now = Date.now();
-    const dbl = now - lastClick < 350;
+    const prev = free?.pts[free.pts.length - 1];
+    const dbl = now - lastClick < 350 && !!prev && Math.hypot(p.x - prev[0], p.y - prev[1]) < 12;
     lastClick = now;
     if (!free) { free = { pts: [[p.x, p.y]], dragging: true, downAt: now }; s.emit(); return; }
     const [sx, sy] = free.pts[0]!;

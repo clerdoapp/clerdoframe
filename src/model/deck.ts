@@ -209,7 +209,7 @@ export interface Picture extends ShapeBase {
   /** Mask the picture to a preset geometry. */
   geom?: string;
   line?: Line;
-  adjust?: { brightness?: number; contrast?: number; saturation?: number; temperature?: number; transparency?: number; grayscale?: boolean; sepia?: boolean; blur?: number; recolor?: Color; /** -100..100, kept as data. */ sharpness?: number };
+  adjust?: { brightness?: number; contrast?: number; saturation?: number; temperature?: number; transparency?: number; grayscale?: boolean; sepia?: boolean; blur?: number; recolor?: Color; /** Duotone direction for recolor: 'dark' maps black to the colour, 'light' maps the colour to white. */ recolorMode?: 'light' | 'dark'; /** -100..100, kept as data. */ sharpness?: number };
   /** Background-removed copy, when made. */
   cutout?: Id;
 }
@@ -257,6 +257,8 @@ export interface Chart extends ShapeBase {
   variant?: string;
   /** Original chart part kept for round trip. */
   rawXml?: string;
+  /** Spreadsheet file the data came from, so it can be read again. */
+  dataLink?: { file: string; sheet?: string; range?: string };
 }
 
 export interface Group extends ShapeBase {
@@ -289,7 +291,7 @@ export interface Media extends ShapeBase {
 export interface InkStroke { points: [number, number, number?][]; color: Color; width: number; tool: 'pen' | 'pencil' | 'highlighter' }
 export interface Ink extends ShapeBase { kind: 'ink'; strokes: InkStroke[] }
 
-export type DiagramLayout = 'basicList' | 'verticalList' | 'process' | 'chevronProcess' | 'cycle' | 'radial' | 'hierarchy' | 'orgChart' | 'pyramid' | 'invertedPyramid' | 'venn' | 'matrix' | 'funnel' | 'timeline' | 'gear' | 'target' | 'stepUp' | 'bendingProcess' | 'pictureList' | 'arrowRibbon';
+export type DiagramLayout = 'basicList' | 'verticalList' | 'process' | 'chevronProcess' | 'cycle' | 'radial' | 'hierarchy' | 'orgChart' | 'pyramid' | 'invertedPyramid' | 'venn' | 'matrix' | 'funnel' | 'timeline' | 'gear' | 'target' | 'stepUp' | 'bendingProcess' | 'pictureList' | 'arrowRibbon' | 'grid' | 'stepsDown';
 export interface DiagramNode { id: Id; text: string; level: number; media?: Id }
 /** A diagram (SmartArt-like): a node outline laid out into shapes when drawn. */
 export interface Diagram extends ShapeBase {
@@ -373,7 +375,7 @@ export interface HeaderFooter { dateTime?: boolean; dateFixed?: string; dateForm
   /** Notes pages and handouts. */
   notes?: { dateTime?: boolean; dateFixed?: string; dateFormat?: string; header?: boolean; headerText?: string; footer?: boolean; footerText?: string; pageNumber?: boolean } }
 
-export interface Comment { id: Id; author: string; initials?: string; at: string; text: string; x?: number; y?: number; shape?: Id; replies?: Comment[]; resolved?: boolean }
+export interface Comment { id: Id; author: string; initials?: string; at: string; text: string; x?: number; y?: number; shape?: Id; replies?: Comment[]; resolved?: boolean; /** Person the comment is assigned to (an @mention name). */ assignee?: string }
 
 export interface Slide {
   id: Id;
@@ -443,7 +445,7 @@ export interface ShowSettings {
 
 export interface MediaItem { id: Id; type: string; name: string; data: Uint8Array }
 
-export interface DeckProps { title?: string; subject?: string; author?: string; keywords?: string; description?: string; category?: string; created?: string; modified?: string; company?: string; lastModifiedBy?: string; /** Proofing language, e.g. 'en-US'. */ language?: string }
+export interface DeckProps { title?: string; subject?: string; author?: string; keywords?: string; description?: string; category?: string; created?: string; modified?: string; company?: string; lastModifiedBy?: string; /** Proofing language, e.g. 'en-US'. */ language?: string; /** Stable id of this document (version history). */ docId?: string }
 
 export interface Deck {
   w: number;

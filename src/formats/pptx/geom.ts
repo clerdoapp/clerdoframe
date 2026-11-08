@@ -187,3 +187,33 @@ export const custGeomXml = (paths: { d: string; w: number; h: number }[], fills?
   }).join('');
   return `<a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="l" t="t" r="r" b="b"/><a:pathLst>${list}</a:pathLst></a:custGeom>`;
 };
+
+/** Guide name that marks custom geometry written from one of our own presets (other apps ignore it). */
+export const PRESET_MARK = 'clerdoPreset_';
+
+/**
+ * a:custGeom for a preset other apps don't know: the drawn paths plus avLst guides naming the preset
+ * and its adjust values, so we can open it as the same editable preset again.
+ */
+export const presetCustGeomXml = (name: string, adj: Record<string, number> | undefined, paths: { d: string; fill?: string }[], w: number, h: number, text?: { x: number; y: number; w: number; h: number }): string => {
+  const xml = custGeomXml(paths.map((p) => ({ d: p.d, w, h })), paths.map((p) => (p.fill === 'none' ? false : undefined)));
+  const av = `<a:avLst><a:gd name="${PRESET_MARK}${name.replace(/[^A-Za-z0-9]/g, '')}" fmla="val 0"/>${Object.entries(adj ?? {}).filter(([k]) => /^[A-Za-z][A-Za-z0-9]*$/.test(k)).map(([k, v]) => `<a:gd name="${k}" fmla="val ${Math.round(v)}"/>`).join('')}</a:avLst>`;
+  const e = (v: number) => Math.round(v * 9525);
+  const rect = text ? `<a:rect l="${e(text.x)}" t="${e(text.y)}" r="${e(text.x + text.w)}" b="${e(text.y + text.h)}"/>` : '<a:rect l="l" t="t" r="r" b="b"/>';
+  return xml.replace('<a:avLst/>', av).replace('<a:rect l="l" t="t" r="r" b="b"/>', rect);
+};
+
+/** The preset name and adjust values stored by presetCustGeomXml, if any. */
+export const readPresetMark = (cg: XNode | undefined): { name: string; adj: Record<string, number> } | null => {
+  const gds = kids(kid(cg, 'avLst'), 'gd');
+  const mark = gds.find((g) => (attr(g, 'name') ?? '').startsWith(PRESET_MARK));
+  if (!mark) return null;
+  const adj: Record<string, number> = {};
+  for (const g of gds) {
+    if (g === mark) continue;
+    const m = /^val\s+(-?\d+(?:\.\d+)?)$/.exec((attr(g, 'fmla') ?? '').trim());
+    const n = attr(g, 'name');
+    if (m && n) adj[n] = Number(m[1]);
+  }
+  return { name: attr(mark, 'name')!.slice(PRESET_MARK.length), adj };
+};

@@ -9,7 +9,7 @@ import { insertShape, placement, replaceShape } from '../charts/place';
 import '../charts/charts.css';
 import './diagrams.css';
 import { COLOR_SCHEMES, DIAGRAM_STYLES, layoutDiagram } from './layout';
-import { addNode, DIAGRAM_LAYOUTS, moveNode, newDiagram, nodesFromParas, parasFromNodes, removeNode, shiftLevel, toGroup, type AddWhere } from './ops';
+import { addNode, DIAGRAM_LAYOUTS, moveNode, newDiagram, nodesFromParas, parasFromNodes, removeNode, shiftLevel, toGroup, withItemCount, type AddWhere } from './ops';
 import { ChangeLayoutDialog, InsertDiagramDialog, SchemePicker, StylePicker, TextPane, themeOf } from './ui';
 
 export { layoutDiagram } from './layout';
@@ -30,9 +30,12 @@ const editDiagram = (s: FrameStore, label: string, fn: (d: Diagram) => void): vo
   s.tryChange(label, () => { const x = s.shape(d.id); if (x?.kind === 'diagram') fn(x); });
 };
 
-const insertDiagram = (s: FrameStore, layout: DiagramLayout, target?: Id): void => {
+const insertDiagram = (s: FrameStore, layout: DiagramLayout, target?: Id, o?: { count?: number; scheme?: string }): void => {
   const p = placement(s, 820, 440, ['dgm', 'obj', 'body'], target);
-  insertShape(s, 'Insert diagram', newDiagram(layout, { x: p.x, y: p.y, w: p.w, h: p.h }), p);
+  const d = newDiagram(layout, { x: p.x, y: p.y, w: p.w, h: p.h });
+  if (o?.count) d.nodes = withItemCount(d.nodes, o.count);
+  if (o?.scheme) d.colorScheme = o.scheme;
+  insertShape(s, 'Insert diagram', d, p);
 };
 
 const textBoxOf = (s: FrameStore): AutoShape | null => {
@@ -81,7 +84,7 @@ export const registerDiagrams = (): void => {
       run: (s, arg) => {
         const o = (typeof arg === 'object' && arg ? arg : {}) as { target?: Id; layout?: DiagramLayout };
         if (o.layout) { insertDiagram(s, o.layout, o.target); return; }
-        openDialog(s, 'diagram.insert', { insert: (l: DiagramLayout) => insertDiagram(s, l, o.target) });
+        openDialog(s, 'diagram.insert', { insert: (l: DiagramLayout, x?: { count?: number; scheme?: string }) => insertDiagram(s, l, o.target, x) });
       },
       enabled: (s) => !!s.surface(),
     },

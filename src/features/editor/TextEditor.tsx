@@ -7,7 +7,7 @@ import { effectiveBody, effectivePara } from '../../render/inherit';
 import { cssMatrix, frameMatrix, mul, parentMatrixOf } from './geom';
 import { cellRect } from './interact';
 import {
-  begin, commit, domRange, end, draw, drawTarget, readDom, readSelection, resync, session, touch, writeSelection, type Session,
+  begin, commit, domRange, end, draw, drawTarget, readDom, readSelection, resync, session, touch, typingHooks, writeSelection, type Session,
 } from './session';
 import { shiftLevel } from './textOps';
 import {
@@ -242,6 +242,7 @@ export const typeText = (s: Session, text: string): void => {
   const at = insertText(s.paras, s.sel, text, st);
   s.pending = null;
   edited(s, { start: at, end: at });
+  typingHooks.afterType?.(s, text);
 };
 
 const deleteDir = (s: Session, dir: -1 | 1, word: boolean, line = false): void => {
@@ -288,6 +289,7 @@ const removeBulletAtStart = (s: Session): boolean => {
 };
 
 const newParagraph = (s: Session): void => {
+  typingHooks.beforeParagraph?.(s);
   // Enter on an empty bulleted paragraph ends the list (or steps out one level).
   const p = s.sel.start;
   const para = s.paras[p.p];
@@ -382,7 +384,7 @@ const onKey = (s: Session, e: KeyboardEvent): void => {
       store.editing = { ...s.edit };
       store.sel = [s.edit.shape];
       resync(s);
-      s.sel = { start: clampPos(s.paras, sel.start), end: clampPos(s.paras, sel.end) };
+      s.sel = typingHooks.undoCaret?.(s, redo) ?? { start: clampPos(s.paras, sel.start), end: clampPos(s.paras, sel.end) };
       s.want = { range: s.sel };
       store.emit();
     }

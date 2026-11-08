@@ -1,4 +1,4 @@
-import { ArrowLeftRight, ChartColumn, LayoutTemplate, Table2 } from 'lucide-react';
+import { ArrowLeftRight, ChartColumn, LayoutTemplate, RefreshCw, Table2, Unlink } from 'lucide-react';
 import { openDialog, registerCommands, run, type Command } from '../../app/commands';
 import { registerDialog, registerMenu, registerPanelSection } from '../../app/registry';
 import type { FrameStore } from '../../app/store';
@@ -50,7 +50,10 @@ const ChartSection = ({ store: s }: { store: FrameStore }) => {
         <Btn store={s} id="chart.editData" icon={Table2} label="Edit data" />
         <Btn store={s} id="chart.type" icon={ChartColumn} label="Change type" />
         <Btn store={s} id="chart.switchRowCol" icon={ArrowLeftRight} />
+        {c.dataLink && <Btn store={s} id="chart.update" icon={RefreshCw} label="Update" />}
+        {c.dataLink && <Btn store={s} id="chart.unlink" icon={Unlink} label="Unlink" />}
       </div>
+      {c.dataLink && <div className="muted small">Linked to {c.dataLink.file}{c.dataLink.sheet ? `, ${c.dataLink.sheet}` : ''}{c.dataLink.range ? ` ${c.dataLink.range}` : ''}</div>}
       <Group title="Quick layout">
         <div className="toollist">
           {QUICK_LAYOUTS.map((l, i) => <button key={i} className="tool" onClick={() => run(s, 'chart.layout', i)}><LayoutTemplate size={16} strokeWidth={S} /><span>{l.label}</span></button>)}

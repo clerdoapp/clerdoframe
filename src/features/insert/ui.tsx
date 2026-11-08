@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AppWindow, AudioLines, Calendar, ChartColumn, ChevronDown, Copy, Grid3x3, Hash, Image, Images, Layers, Link2, MessageSquarePlus, Mic, MonitorUp, MousePointerClick,
-  Network, PanelBottom, PenLine, Plus, Rows3, ScanLine, Shapes, Sigma, Smile, Square, Table2, Type, Video, WandSparkles, ZoomIn, Spline, Omega, type LucideIcon,
+  Network, PanelBottom, PenLine, Plus, Rows3, ScanLine, Shapes, Sigma, Smile, Square, Table2, Type, Video, WandSparkles, PenTool, Waypoints, ZoomIn, Spline, Omega, type LucideIcon,
 } from 'lucide-react';
 import { command, run } from '../../app/commands';
 import { registerPanelSection } from '../../app/registry';
@@ -148,6 +148,12 @@ const IllustrationsSection = ({ store: s }: { store: FrameStore }) => (
             <button className="tool" onClick={() => { close(); run(s, 'draw.freeform'); }}><Spline size={16} strokeWidth={S} /> Freeform</button>
             <button className="tool" onClick={() => { close(); run(s, 'draw.scribble'); }}><PenLine size={16} strokeWidth={S} /> Scribble</button>
           </Row>
+          {command('draw.curve') && (
+            <Row>
+              <button className="tool" onClick={() => { close(); run(s, 'draw.curve'); }}><PenTool size={16} strokeWidth={S} /> Curve</button>
+              <button className="tool" onClick={() => { close(); run(s, 'draw.polyline'); }}><Waypoints size={16} strokeWidth={S} /> Polyline</button>
+            </Row>
+          )}
         </div>
       )}
     </Pop>
@@ -189,7 +195,7 @@ const TextSection = ({ store: s }: { store: FrameStore }) => (
 const SymbolsSection = ({ store: s }: { store: FrameStore }) => (
   <Row>
     <Ext store={s} id="insert.equation" icon={Sigma} label="Equation" />
-    <Btn store={s} id="insert.symbol" icon={Omega} label="Symbol" />
+    <Btn store={s} id={command('insert.specialCharacters') ? 'insert.specialCharacters' : 'insert.symbol'} icon={Omega} label="Symbol" />
   </Row>
 );
 

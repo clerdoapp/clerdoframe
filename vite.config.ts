@@ -9,7 +9,9 @@ const offline = (): Plugin => ({
   apply: 'build',
   closeBundle() {
     const core = /^(carlito|hanken-grotesk|arimo|tinos)-(latin|latin-ext)-/;
-    const assets = readdirSync('dist/assets').filter((f) => !f.endsWith('.woff') && (!f.endsWith('.woff2') || core.test(f))).map((f) => `assets/${f}`);
+    // Style sheets of fonts loaded on first use (400-*.css, 700-italic-*.css...) are cached when used, like their font files.
+    const lazyFontCss = /^[47]00(-italic)?-[\w-]+\.css$/;
+    const assets = readdirSync('dist/assets').filter((f) => !f.endsWith('.woff') && (!f.endsWith('.woff2') || core.test(f)) && !lazyFontCss.test(f)).map((f) => `assets/${f}`);
     const files = ['./', 'manifest.webmanifest', 'favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', ...assets];
     const version = assets.join('').length + '-' + Date.now().toString(36);
     writeFileSync(join('dist', 'sw.js'), `const CACHE = 'clerdoframe-${version}';
@@ -23,7 +25,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   e.respondWith(caches.match(e.request, { ignoreVary: true }).then((hit) => hit || fetch(e.request).then((r) => {
-    if (r.ok && e.request.url.endsWith('.woff2')) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
+    if (r.ok && /\\.(woff2|css)$/.test(e.request.url)) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
     return r;
   })));
 });

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Dash, Deck, Effects, Fill, Line } from '../model/deck';
+import type { Color, Dash, Deck, Effects, Fill, Line } from '../model/deck';
 import { css, resolve, type ColorCtx } from './color';
 
 const urls = new Map<string, { url: string; size: number }>();
@@ -183,4 +183,61 @@ export const effectFilter = (fx: Effects | undefined, ctx: ColorCtx, defs: Defs)
     </filter>,
   );
   return `url(#${id})`;
+};
+
+/** Ends of a duotone recolor: luminance 0 maps to `dark`, 1 to `light`. */
+export const duotoneEnds = (recolor: Color, mode: 'light' | 'dark' | undefined, ctx: ColorCtx): { dark: string; light: string } => {
+  const c = resolve(recolor, ctx).hex;
+  return mode === 'light' ? { dark: c, light: '#FFFFFF' } : { dark: '#000000', light: c };
+};
+
+/** SVG duotone filter for a picture recolor. Returns the filter url. */
+export const duotoneFilter = (recolor: Color, mode: 'light' | 'dark' | undefined, ctx: ColorCtx, defs: Defs): string => {
+  const { dark, light } = duotoneEnds(recolor, mode, ctx);
+  const a = dark.replace('#', ''), b = light.replace('#', '');
+  const ch = (h: string, i: number) => (parseInt(h.slice(i, i + 2), 16) || 0) / 255;
+  const id = defs.id('duo');
+  const t = (i: number) => `${ch(a, i).toFixed(4)} ${ch(b, i).toFixed(4)}`;
+  defs.add(
+    <filter key={id} id={id} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+      <feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0" />
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues={t(0)} />
+        <feFuncG type="table" tableValues={t(2)} />
+        <feFuncB type="table" tableValues={t(4)} />
+      </feComponentTransfer>
+    </filter>,
+  );
+  return `url(#${id})`;
+};
+
+/**
+ * A mirrored copy of a drawn shape below its box (Effects.reflection): faded from `alpha` at the
+ * bottom edge to clear at `size` of the height, `dist` px below, optionally blurred.
+ */
+export const reflectionOf = (fx: Effects | undefined, w: number, h: number, body: ReactNode, defs: Defs): ReactNode => {
+  const r = fx?.reflection;
+  if (!r || !(r.size > 0) || !(r.alpha > 0) || h <= 0) return null;
+  const size = Math.min(1, r.size);
+  const gid = defs.id('rg'), mid = defs.id('rm');
+  // The mask lives in the mirrored space: the shape's bottom edge is y = h there.
+  defs.add(
+    <linearGradient key={gid} id={gid} gradientUnits="userSpaceOnUse" x1="0" y1={h} x2="0" y2={h * (1 - size)}>
+      <stop offset="0" stopColor="#fff" stopOpacity={Math.min(1, r.alpha)} />
+      <stop offset="1" stopColor="#fff" stopOpacity="0" />
+    </linearGradient>,
+  );
+  const pad = Math.max(w, h);
+  defs.add(<mask key={mid} id={mid} maskUnits="userSpaceOnUse" x={-pad} y={-pad} width={w + pad * 2} height={h + pad * 2}><rect x={-pad} y={-pad} width={w + pad * 2} height={h + pad * 2} fill={`url(#${gid})`} /></mask>);
+  let blur: string | undefined;
+  if (r.blur > 0.05) {
+    const fid = defs.id('rb');
+    defs.add(<filter key={fid} id={fid} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation={r.blur / 2} /></filter>);
+    blur = `url(#${fid})`;
+  }
+  return (
+    <g className="reflection" transform={`translate(0 ${2 * h + Math.max(0, r.dist)}) scale(1 -1)`} pointerEvents="none" aria-hidden="true">
+      <g mask={`url(#${mid})`}><g filter={blur}>{body}</g></g>
+    </g>
+  );
 };

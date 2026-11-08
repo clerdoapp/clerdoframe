@@ -514,7 +514,42 @@ const arrowRibbon: LayoutFn = (d, roots, B) => {
   return out;
 };
 
+/** Cards in a grid: a coloured title bar with the item's text over a light body with its sub-items. */
+const grid: LayoutFn = (d, roots, B) => {
+  const n = Math.max(1, roots.length);
+  const { cols, rows } = gridOf(n, B.w, B.h * 1.2);
+  const gx = B.w * 0.025, gy = B.h * 0.05;
+  const cw = (B.w - gx * (cols - 1)) / cols, ch = (B.h - gy * (rows - 1)) / rows;
+  const any = roots.some((r) => r.children.length);
+  const out: AutoShape[] = [];
+  roots.forEach((r, i) => {
+    const x = B.x + (i % cols) * (cw + gx), y = B.y + Math.floor(i / cols) * (ch + gy);
+    const th = any ? Math.min(ch * 0.4, Math.max(28, ch * 0.3)) : ch;
+    out.push(mk(d, { x, y, w: cw, h: th }, { text: r.node.text, lk: look(d, i, n), node: r.node.id }));
+    if (any) out.push(mk(d, { x, y: y + th, w: cw, h: ch - th }, { sub: lines(r), vAlign: 't', align: 'l', lk: look(d, i, n, 1, { light: true }), name: 'Body' }));
+  });
+  return out;
+};
+
+/** A staircase going down to the right, with an elbow arrow from each step to the next. */
+const stepsDown: LayoutFn = (d, roots, B) => {
+  const n = Math.max(1, roots.length);
+  const bh = Math.min(B.h / (n * 1.05 + 0.5), B.w * 0.3);
+  const bw = Math.min(B.w * 0.42, Math.max(bh * 1.8, B.w / (n * 0.6 + 0.4)));
+  const dx = n > 1 ? (B.w - bw) / (n - 1) : 0, dy = n > 1 ? (B.h - bh) / (n - 1) : 0;
+  const out: AutoShape[] = [];
+  roots.forEach((r, i) => {
+    const x = B.x + (n > 1 ? i * dx : (B.w - bw) / 2), y = B.y + (n > 1 ? i * dy : (B.h - bh) / 2);
+    out.push(mk(d, { x, y, w: bw, h: bh }, { geom: 'roundRect', adj: { adj: 16000 }, text: r.node.text, sub: lines(r), lk: look(d, i, n), node: r.node.id }));
+    const ax = x + Math.min(bw * 0.12, dx * 0.4), ay = y + bh + 3;
+    const aw = x + dx - ax - 3, ah = y + dy + bh / 2 - ay;
+    if (i < n - 1 && aw > 6 && ah > 6) out.push(mk(d, { x: ax, y: ay, w: aw, h: ah }, { geom: 'bentArrow', rot: 180, flipH: true, adj: { adj1: 30000, adj2: 30000, adj3: 30000, adj4: 0 }, lk: accentLook(d), noText: true }));
+  });
+  return out;
+};
+
 const LAYOUTS: Record<DiagramLayout, LayoutFn> = {
+  grid, stepsDown,
   basicList, verticalList, process, chevronProcess, cycle, radial,
   hierarchy: (d, r, B) => tree(d, r, B, false), orgChart: (d, r, B) => tree(d, r, B, true),
   pyramid: pyramid(false), invertedPyramid: pyramid(true), venn, matrix, funnel, timeline, gear, target, stepUp, bendingProcess, pictureList, arrowRibbon,

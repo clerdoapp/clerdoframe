@@ -19,6 +19,20 @@ const ctor = (): RecCtor | undefined => {
 
 export const captionsSupported = (): boolean => !!ctor();
 
+/** How captions look in the show. lang '' follows the device language. */
+export interface CaptionPrefs { size: 'S' | 'M' | 'L' | 'XL'; pos: 'top' | 'bottom'; lang: string }
+const PREFS_KEY = 'clerdoframe.captions';
+export const captionPrefs: CaptionPrefs = (() => {
+  const d: CaptionPrefs = { size: 'M', pos: 'bottom', lang: '' };
+  try { const v = JSON.parse(localStorage.getItem(PREFS_KEY) ?? 'null') as Partial<CaptionPrefs> | null; if (v && typeof v === 'object') return { ...d, ...v }; } catch { /* private mode or no storage */ }
+  return d;
+})();
+export const setCaptionPrefs = (p: Partial<CaptionPrefs>): void => {
+  Object.assign(captionPrefs, p);
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(captionPrefs)); } catch { /* private mode */ }
+};
+export const CAPTION_FONT: Record<CaptionPrefs['size'], number> = { S: 16, M: 22, L: 30, XL: 40 };
+
 export class Captioner {
   private rec: Rec | null = null;
   private on = false;
@@ -30,7 +44,7 @@ export class Captioner {
     const r = new C();
     r.continuous = true;
     r.interimResults = true;
-    r.lang = navigator.language || 'en-US';
+    r.lang = captionPrefs.lang || navigator.language || 'en-US';
     r.onresult = (e) => {
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {

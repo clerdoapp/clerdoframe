@@ -5,9 +5,9 @@ import type { FrameStore } from '../../app/store';
 import type { Diagram, DiagramLayout, Id, Theme } from '../../model/deck';
 import { contextFor, drawShape } from '../../render/SlideView';
 import { Defs } from '../../render/paint';
-import { Dialog, S } from '../../ui/kit';
+import { Dialog, NumberField, S, Select } from '../../ui/kit';
 import { COLOR_SCHEMES, DIAGRAM_STYLES, layoutDiagram, schemeColor } from './layout';
-import { addNode, DIAGRAM_GROUPS, DIAGRAM_LAYOUTS, moveNode, newDiagram, removeNode, shiftLevel, type DiagramGroup } from './ops';
+import { addNode, DIAGRAM_GROUPS, DIAGRAM_LAYOUTS, moveNode, newDiagram, removeNode, shiftLevel, withItemCount, type DiagramGroup } from './ops';
 import { css } from '../../render/color';
 
 export const themeOf = (store: FrameStore): Theme => {
@@ -53,12 +53,21 @@ export const LayoutGallery = ({ store, value, onPick, base }: { store: FrameStor
   );
 };
 
-export const InsertDiagramDialog = ({ store, data, close }: DialogProps<{ insert: (l: DiagramLayout) => void }>) => {
+export const InsertDiagramDialog = ({ store, data, close }: DialogProps<{ insert: (l: DiagramLayout, o?: { count?: number; scheme?: string }) => void }>) => {
   const [layout, setLayout] = useState<DiagramLayout>('basicList');
+  const [count, setCount] = useState<number | null>(null);
+  const [scheme, setScheme] = useState('primary');
+  const base = newDiagram(layout, { x: 0, y: 0, w: 560, h: 300 });
+  const roots = base.nodes.filter((n) => n.level === 0).length;
+  const preview = { ...base, colorScheme: scheme, nodes: count ? withItemCount(base.nodes, count) : base.nodes };
   return (
-    <Dialog title="Insert diagram" close={close} wide okLabel="Insert" onOk={() => { data?.insert(layout); }}>
-      <LayoutGallery store={store} value={layout} onPick={setLayout} />
-      <div className="chartbig"><DiagramPreview store={store} d={newDiagram(layout, { x: 0, y: 0, w: 560, h: 300 })} width={560} height={300} /></div>
+    <Dialog title="Insert diagram" close={close} wide okLabel="Insert" onOk={() => { data?.insert(layout, { ...(count ? { count } : {}), scheme }); }}>
+      <LayoutGallery store={store} value={layout} onPick={(l) => { setLayout(l); setCount(null); }} />
+      <div className="num2">
+        <NumberField label="Number of items" value={count ?? roots} min={1} max={30} onChange={(n) => setCount(Math.round(n))} />
+        <Select label="Colors" value={scheme} options={COLOR_SCHEMES.map((c) => [c.id, c.label] as [string, string])} onChange={setScheme} />
+      </div>
+      <div className="chartbig"><DiagramPreview store={store} d={preview} width={560} height={300} /></div>
     </Dialog>
   );
 };

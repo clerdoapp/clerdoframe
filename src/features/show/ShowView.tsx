@@ -5,9 +5,9 @@ import {
 import { findShape, type Shape, type Slide } from '../../model/deck';
 import { SlideView } from '../../render/SlideView';
 import { S } from '../../ui/kit';
-import { ShowController, type InkTool } from './controller';
+import { ShowController, showBarExtras, type InkTool } from './controller';
 import { Stage, useShow } from './Stage';
-import { Captioner, captionsSupported } from './captions';
+import { CAPTION_FONT, Captioner, captionPrefs, captionsSupported } from './captions';
 
 const fmt = (sec: number): string => {
   const s = Math.max(0, Math.floor(sec));
@@ -244,9 +244,10 @@ export const CaptionBar = ({ c }: { c: ShowController }) => {
     const cap = new Captioner((t) => { c.captions = t; c.emit(); }, () => { c.subtitles = false; c.emit(); });
     cap.start();
     return () => cap.stop();
-  }, [c, c.subtitles]);
+  }, [c, c.subtitles, captionPrefs.lang]);
   if (!c.subtitles || !c.captions) return null;
-  return <div className="show-captions" aria-live="polite">{c.captions}</div>;
+  const top = captionPrefs.pos === 'top';
+  return <div className="show-captions" aria-live="polite" style={{ fontSize: CAPTION_FONT[captionPrefs.size], ...(top ? { top: 24, bottom: 'auto' } : {}) }}>{c.captions}</div>;
 };
 
 export const SubtitleButton = ({ c }: { c: ShowController }) => captionsSupported() ? (
@@ -312,6 +313,7 @@ export const ShowSurface = ({ c, bar = true, primary = true, win = window }: { c
           <button className="show-btn" aria-label="See all slides" title="See all slides" onClick={() => { c.overview = true; c.emit(); }}><Grid2x2 size={18} strokeWidth={S} /></button>
           <button className={`show-btn${c.zoom.k > 1 ? ' on' : ''}`} aria-label="Zoom" title="Zoom in (press again to reset)" onClick={() => { c.zoom = c.zoom.k > 1 ? { k: 1, x: 0, y: 0 } : { k: 2, x: 0, y: 0 }; c.emit(); }}><Search size={18} strokeWidth={S} /></button>
           <SubtitleButton c={c} />
+          {[...showBarExtras].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((x) => <span key={x.id} style={{ display: 'contents' }}>{x.render(c)}</span>)}
           <MoreMenu c={c} />
         </div>
       )}

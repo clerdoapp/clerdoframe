@@ -2,7 +2,7 @@
 import type { Background, Comment, Deck, Hyperlink, Layout, ParaStyle, Slide, TextBody, Theme } from '../../model/deck';
 import { esc } from '../xml';
 import { emu, fillXml, themeSchemeXml } from './dml';
-import { readMeta } from './kept';
+import { EXTRA_PART, REL_CUSTOM_XML, pptxExtras, readMeta } from './kept';
 import { CT, NS, PackageWriter, REL, XML_HEAD, extFor, parseKeptRels, relType, remapRels, type RelSet } from './opc';
 import { listStyleXml, textBodyXml, type TextWriteCtx } from './text';
 import { timingXml, transitionXmlFor } from './write-timing';
@@ -65,7 +65,7 @@ export const writePptx = (deck: Deck, opts: WriteOptions = {}): Uint8Array => {
     pw.put(p, kept[p]!, meta.types[p] ?? (p.endsWith('.rels') ? undefined : 'application/octet-stream'));
     if (meta.types[p]) pw.overrides.set(p, meta.types[p]!);
   };
-  for (const p of Object.keys(kept)) if (!p.startsWith('clerdoframe/')) putKept(p);
+  for (const p of Object.keys(kept)) if (!p.startsWith('clerdoframe/') && !EXTRA_PART.test(p)) putKept(p);
   // Our parts go to fresh names when a kept part already took one.
   const taken = (p: string) => pw.has(p);
 
@@ -239,6 +239,11 @@ export const writePptx = (deck: Deck, opts: WriteOptions = {}): Uint8Array => {
   if (!pw.has('ppt/tableStyles.xml')) pw.put('ppt/tableStyles.xml', XML_HEAD + `<a:tblStyleLst xmlns:a="${NS.a}" def="{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"/>`, CT.tableStyles);
   presRels.add(REL.tableStyles, 'ppt/tableStyles.xml');
   for (const r of meta.pres ?? []) if (!r.external && keptExists(r.target) && !['slide', 'slideMaster'].includes(relType(r.type))) presRels.add(r.type, r.target);
+  for (const x of pptxExtras()) {
+    const xml = x.write(deck);
+    const xp = `customXml/clerdoframe-${x.id}.xml`;
+    if (xml && EXTRA_PART.test(xp)) { pw.put(xp, XML_HEAD + xml, 'application/xml'); presRels.add(REL_CUSTOM_XML, xp); }
+  }
   // Theme relationship of the presentation part (first master's theme).
   presRels.add(REL.theme, 'ppt/theme/theme1.xml');
 

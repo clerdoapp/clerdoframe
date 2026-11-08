@@ -5,7 +5,7 @@ import type { Diagram, DiagramLayout } from '../src/model/deck';
 import { buildTree, COLOR_SCHEMES, DIAGRAM_STYLES, fitSize, layoutDiagram, schemeColor } from '../src/features/diagrams/layout';
 import { addNode, DIAGRAM_LAYOUTS, moveNode, newDiagram, nodesFromParas, nodesFromText, parasFromNodes, removeNode, sampleNodes, shiftLevel, subtree, textFromNodes, toGroup } from '../src/features/diagrams/ops';
 
-const ALL: DiagramLayout[] = ['basicList', 'verticalList', 'process', 'chevronProcess', 'cycle', 'radial', 'hierarchy', 'orgChart', 'pyramid', 'invertedPyramid', 'venn', 'matrix', 'funnel', 'timeline', 'gear', 'target', 'stepUp', 'bendingProcess', 'pictureList', 'arrowRibbon'];
+const ALL: DiagramLayout[] = ['basicList', 'verticalList', 'process', 'chevronProcess', 'cycle', 'radial', 'hierarchy', 'orgChart', 'pyramid', 'invertedPyramid', 'venn', 'matrix', 'funnel', 'timeline', 'gear', 'target', 'stepUp', 'bendingProcess', 'pictureList', 'arrowRibbon', 'grid', 'stepsDown'];
 const box = { x: 100, y: 50, w: 800, h: 450 };
 const lv = (d: Diagram) => d.nodes.map((n) => `${n.level}${n.text}`).join(' ');
 

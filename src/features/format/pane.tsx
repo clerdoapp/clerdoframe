@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Crop as CropIcon, Image as ImageIcon, LetterText, Move, PaintBucket, Plus, RotateCcw, Sparkles, Trash2, type LucideIcon } from 'lucide-react';
 import { command, run } from '../../app/commands';
 import { pickFile } from '../../app/files';
-import { registerPane } from '../../app/registry';
+import { panelSections, registerPane } from '../../app/registry';
 import type { FrameStore } from '../../app/store';
 import type { ArrowHead, AutoShape, Color, Dash, Effects, Fill, GradientStop, Line, PatternName, Picture, RunStyle, Shape, TextBody } from '../../model/deck';
 import { css } from '../../render/color';
@@ -221,9 +221,15 @@ const FillLineTab = ({ store }: { store: FrameStore }) => {
       )}
       {lineable.length > 0 && <Fold title="Line" open><LineEditor store={store} line={val(l)} mixed={l === MIXED} /></Fold>}
       {!fillable.length && !lineable.length && <p className="muted small">This object has no fill or line.</p>}
+      <PaneExtras store={store} tab="format:shape" />
     </>
   );
 };
+
+/** Folds other features add to a format pane tab (registerPanelSection with tab 'format:<name>'). */
+const PaneExtras = ({ store, tab, inline }: { store: FrameStore; tab: string; inline?: boolean }) => (
+  <>{panelSections(tab, store).map((x) => (inline ? <div key={x.title}>{x.render(store)}</div> : <Fold key={x.title} title={x.title} open>{x.render(store)}</Fold>))}</>
+);
 
 // ---------- Effects ----------
 
@@ -267,6 +273,7 @@ const EffectsTab = ({ store }: { store: FrameStore }) => {
         )}
       </Fold>
       <Fold title="Reflection">
+        <PaneExtras store={store} tab="format:reflection" inline />
         <Check label="Reflection" checked={!!fx.reflection} onChange={(v) => set({ reflection: v ? { alpha: 0.5, size: 0.35, dist: 0, blur: 0.5 } : undefined })} />
         {fx.reflection && (
           <>
@@ -474,11 +481,12 @@ const PictureTab = ({ store }: { store: FrameStore }) => {
         <div className="cgtitle">Recolor</div>
         <div className="fmtpresets">
           {([['None', {}], ['Grayscale', { grayscale: true }], ['Sepia', { sepia: true }], ['Washout', { brightness: 70, contrast: -70 }], ['Black and white', { grayscale: true, contrast: 100 }]] as [string, Picture['adjust']][]).map(([label, v]) => (
-            <button key={label} onClick={() => set({ grayscale: undefined, sepia: undefined, brightness: undefined, contrast: undefined, ...v }, 'Recolor')}
-              className={label === 'None' ? (!a.grayscale && !a.sepia ? 'on' : '') : label === 'Grayscale' ? (a.grayscale && !a.contrast ? 'on' : '') : label === 'Sepia' ? (a.sepia ? 'on' : '') : ''}>{label}</button>
+            <button key={label} onClick={() => set({ grayscale: undefined, sepia: undefined, brightness: undefined, contrast: undefined, recolor: undefined, recolorMode: undefined, ...v }, 'Recolor')}
+              className={label === 'None' ? (!a.grayscale && !a.sepia && !a.recolor ? 'on' : '') : label === 'Grayscale' ? (a.grayscale && !a.contrast ? 'on' : '') : label === 'Sepia' ? (a.sepia ? 'on' : '') : ''}>{label}</button>
           ))}
         </div>
       </Fold>
+      <PaneExtras store={store} tab="format:picture" />
       <Fold title="Picture transparency">
         <Percent label="Transparency" value={a.transparency ?? 0} onChange={(n) => set({ transparency: n })} />
       </Fold>

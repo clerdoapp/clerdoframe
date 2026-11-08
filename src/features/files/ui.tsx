@@ -103,7 +103,7 @@ export const copySlideImage = async (store: FrameStore): Promise<void> => {
 
 const EXPORTS: { id: string; group: string }[] = [
   { id: 'pptx', group: 'Presentation' }, { id: 'potx', group: 'Presentation' }, { id: 'ppsx', group: 'Presentation' }, { id: 'odp', group: 'Presentation' },
-  { id: 'pdf', group: 'Document' }, { id: 'rtf', group: 'Document' }, { id: 'txt', group: 'Document' },
+  { id: 'pdf', group: 'Document' }, { id: 'html', group: 'Document' }, { id: 'rtf', group: 'Document' }, { id: 'txt', group: 'Document' },
   { id: 'png', group: 'Picture' }, { id: 'jpeg', group: 'Picture' }, { id: 'pngAll', group: 'Picture' }, { id: 'jpegAll', group: 'Picture' }, { id: 'svg', group: 'Picture' },
   { id: 'gif', group: 'Motion' }, { id: 'webm', group: 'Motion' },
 ];

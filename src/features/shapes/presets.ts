@@ -71,6 +71,7 @@ const LABELS: Record<string, string> = {
   actionButtonBackPrevious: 'Back button', actionButtonForwardNext: 'Next button', actionButtonBeginning: 'First button', actionButtonEnd: 'Last button', actionButtonHome: 'Home button',
   actionButtonInformation: 'Information button', actionButtonReturn: 'Return button', actionButtonMovie: 'Video button', actionButtonDocument: 'Document button', actionButtonSound: 'Sound button',
   actionButtonHelp: 'Help button', actionButtonBlank: 'Blank button',
+  speech: 'Speech bubble', roundedSpeech: 'Round speech bubble', thoughtBubble: 'Thought bubble', starburst: 'Burst', arrowNorthEast: 'Diagonal arrow',
   chartPlus: 'Chart plus', chartX: 'Chart cross', chartStar: 'Chart star', cornerTabs: 'Corner tabs', squareTabs: 'Square tabs', plaqueTabs: 'Plaque tabs',
 };
 

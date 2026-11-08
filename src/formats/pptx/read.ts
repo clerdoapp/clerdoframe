@@ -8,7 +8,7 @@ import {
 import { DEFAULT_THEME, defaultTextStyles, newDeck } from '../../model/defaults';
 import { attr, boolAttr, rid, deepText, find, findAll, kid, kids, numAttr, type XNode } from '../xml';
 import { px, readColor, type ColorCtx } from './dml';
-import { Keeper, type KeptMeta } from './kept';
+import { EXTRA_PART, Keeper, pptxExtras, type KeptMeta } from './kept';
 import { MEDIA_TYPES, Package, relType, type Rel } from './opc';
 import { readBackground, readTextBodyIn, readTree, resolveConnectors, textCtxFor, type FormatScheme, type PartCtx } from './read-shapes';
 import { readTiming, readTransition } from './read-timing';
@@ -397,7 +397,15 @@ export const readPptx = (data: Uint8Array, opts: ReadOptions = {}): ReadResult =
 
   // ---------- Parts we keep as they are ----------
   const meta: KeptMeta = keeper.meta;
-  const presKeep = presRels.filter((r) => ['tags', 'customXml', 'vbaProject'].includes(relType(r.type)) || /customXml/i.test(r.type));
+  // Our own extra data parts are read back into the model, not kept as parts.
+  const isExtra = (r: Rel) => !r.external && EXTRA_PART.test(pkg.name(r.target) ?? '');
+  for (const r of presRels.filter(isExtra)) {
+    const id = EXTRA_PART.exec(pkg.name(r.target) ?? '')?.[1];
+    const x = pptxExtras().find((e) => e.id === id);
+    const src = x ? pkg.xml(r.target)?.src : undefined;
+    if (x && src) { try { x.read(deck, src); } catch { warn('Some ClerdoFrame data could not be read.'); } }
+  }
+  const presKeep = presRels.filter((r) => !isExtra(r) && (['tags', 'customXml', 'vbaProject'].includes(relType(r.type)) || /customXml/i.test(r.type)));
   meta.pres = keeper.keepRels(presKeep.filter((r) => relType(r.type) !== 'vbaProject'));
   meta.root = keeper.keepRels(rootRels.filter((r) => ['custom-properties', 'thumbnail'].includes(relType(r.type))));
   const nmRel = presRels.find((r) => relType(r.type) === 'notesMaster');

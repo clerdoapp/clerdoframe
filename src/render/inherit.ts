@@ -111,10 +111,20 @@ export const fontName = (f: string | undefined, theme: Theme): string => {
 const FALLBACK: Record<string, string> = {
   calibri: 'Carlito', 'calibri light': 'Carlito', cambria: 'Caladea', arial: 'Arimo', helvetica: 'Arimo', 'times new roman': 'Tinos', 'courier new': 'Cousine',
   aptos: 'Hanken Grotesk', 'aptos display': 'Hanken Grotesk', 'aptos narrow': 'Hanken Grotesk', 'segoe ui': 'Open Sans', verdana: 'Open Sans', tahoma: 'Open Sans', 'century gothic': 'Montserrat', 'gill sans mt': 'Lato', 'franklin gothic': 'Lato',
+  // Look-alikes from the font library for common system fonts.
+  'comic sans ms': 'Comic Neue', impact: 'Anton', georgia: 'Gelasio', 'trebuchet ms': 'Fira Sans',
+  palatino: 'EB Garamond', 'palatino linotype': 'EB Garamond', garamond: 'EB Garamond', 'book antiqua': 'EB Garamond',
+  consolas: 'JetBrains Mono', 'lucida console': 'JetBrains Mono', courier: 'Cousine', 'arial black': 'Archivo', 'franklin gothic medium': 'Archivo',
+  'segoe print': 'Kalam', 'segoe script': 'Dancing Script', 'brush script mt': 'Satisfy', 'lucida handwriting': 'Dancing Script',
+  meiryo: 'Noto Sans JP', 'yu gothic': 'Noto Sans JP', 'ms gothic': 'Noto Sans JP', 'malgun gothic': 'Noto Sans KR', 'microsoft yahei': 'Noto Sans SC', simsun: 'Noto Sans SC',
+  'traditional arabic': 'Amiri', 'arabic typesetting': 'Amiri', 'simplified arabic': 'Noto Sans Arabic', 'sakkal majalla': 'Noto Naskh Arabic',
 };
+/** Told about every font family the renderer uses, so bundled fonts can be loaded on first use; beforeExport runs before slides are drawn to images. */
+export const fontHooks: { used?: (name: string) => void; beforeExport?: (deck: import('../model/deck').Deck) => Promise<void> } = {};
 /** CSS font-family list with a metric-compatible bundled fallback. */
 export const fontStack = (name: string): string => {
   const fb = FALLBACK[name.toLowerCase()];
+  if (fontHooks.used) { fontHooks.used(name); if (fb) fontHooks.used(fb); }
   return `"${name.replace(/"/g, '')}"${fb ? `, "${fb}"` : ''}, "Hanken Grotesk", system-ui, sans-serif`;
 };
 
