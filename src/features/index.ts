@@ -1,4 +1,7 @@
 import { registerCore } from './core';
+import { registerGText } from './gtext';
+import { registerGObjects } from './gobjects';
+import { registerGPresent } from './gpresent';
 import { registerEditor } from './editor';
 import { registerFormat } from './format';
 import { registerInsert } from './insert';
@@ -30,4 +33,7 @@ export const registerFeatures = (): void => {
   registerReview();
   registerViews();
   registerFiles();
+  registerGText();
+  registerGObjects();
+  registerGPresent();
 };
